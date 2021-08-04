@@ -25,14 +25,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-
     - name: Set up Python ${{ matrix.python-version }}
-
       uses: actions/setup-python@v2
       with:
-
         python-version: ${{ matrix.python-version }}
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -51,60 +47,42 @@ jobs:
       run: poetry run pflake8
     - name: Test with tox
       run: tox | tee report.txt
-
     - if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-
       name: Create test coverage badge when on master and not on pull request
     - name: Get coverage
       run: |
         echo "cov=$(grep 'TOTAL' report.txt | tail -1 | sed 's/\s\+/,/g' | cut -d',' -f 4 | sed 's/%//g' )" >> $GITHUB_ENV
         rm report.txt
     - name: Get badge color red
-
       if: ${{ env.cov < 51 }}
-
       run: |
         echo "cov_color=red" >> $GITHUB_ENV
     - name: Get badge color orange
-
       if: ${{ env.cov < 71 && env.cov > 50}}
-
       run: |
         echo "cov_color=orange" >> $GITHUB_ENV
     - name: Get badge color yellow
-
       if: ${{ env.cov < 81 && env.cov > 70}}
-
       run: |
         echo "cov_color=yellow" >> $GITHUB_ENV
     - name: Get badge color yellowgreen
-
       if: ${{ env.cov < 86 && env.cov > 80}}
-
       run: |
         echo "cov_color=yellowgreen" >> $GITHUB_ENV
     - name: Get badge color green
-
       if: ${{ env.cov < 95 && env.cov > 85}}
-
       run: |
         echo "cov_color=green" >> $GITHUB_ENV
     - name: Get badge color brightgreen
-
       if: ${{ env.cov > 94}}
-
       run: |
         echo "cov_color=brightgreen" >> $GITHUB_ENV
     - name: Create test badge
       uses: schneegans/dynamic-badges-action@v1.1.0
       with:
-
         auth: ${{ secrets.GIST_SECRET }}
-
         gistID: 6d07d95e43929bcbf9d031c2c8f2015f
         filename: forayer_test_gist.json
         label: coverage
-
         message: ${{ env.cov }} %
         color: ${{ env.cov_color }}
-
