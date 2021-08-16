@@ -1,3 +1,7 @@
+<p align="center">
+<img src="https://github.com/dobraczka/kiez/raw/main/docs/forayerlogo.png" alt="forayer logo", width=200/>
+</p>
+
 <h2 align="center"> forayer</h2>
 
 <p align="center">
@@ -6,8 +10,9 @@
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
-Usage
+About
 =====
+forayer is a library of **f**irst aid utilities for kn**o**wledge g**r**aph explor**a**tion with an entit**y** c**e**ntric app**r**oach.
 
 Installation
 ============

@@ -19,6 +19,8 @@ tqdm = "^4.56.0"
 importlib-metadata = "^4.5.0;python_version<3.8"
 sphinx = {version = "^4.0.2", optional = true}
 insegel = {version = "^1.1.0", optional = true}
+wget = "^3.2"
+gensim = "^4.0.1"
 
 
 [tool.poetry.dev-dependencies]
@@ -37,6 +39,8 @@ flake8-debugger = "^4.0.0"
 flake8-comprehensions = "^3.5.0"
 flake8-print = "^4.0.0"
 typer = "^0.3.2"
+flake8-bugbear = "^21.4.3"
+flake8-simplify = "^0.14.1"
 
 
 [tool.poetry.extras]
@@ -50,7 +54,7 @@ build-backend = "poetry.core.masonry.api"
 ignore = "E203, E266, E501, W503, F403, F401, B950"
 max-line-length = 88
 max-complexity = 18
-select = "B,C,E,F,W,T4,B9"
+select = "B,C,C4,E,F,W,T4,B9"
 count = "true"
 show-source = "true"
 statistics = "true"
