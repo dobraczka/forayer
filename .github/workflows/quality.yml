@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Code quality
+name: Linting
 
 # Controls when the action will run.
 on:
@@ -28,12 +28,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install poetry
         python -m pip install black
-        python -m pip install pep8-naming
-        python -m pip install pyflakes
-        python -m pip install flake8-bugbear
-        python -m pip install flake8-simplify
-        python -m pip install pyproject-flake8
-        python -m pip install tox
+        poetry install -v
     - name: Check black code style
       run: black --config pyproject.toml --diff forayer/ tests/
     - name: Assess code quality
