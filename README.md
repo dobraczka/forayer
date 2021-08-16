@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/dobraczka/kiez/raw/main/docs/forayerlogo.png" alt="forayer logo", width=200/>
+<img src="https://github.com/dobraczka/forayer/raw/main/docs/forayerlogo.png" alt="forayer logo", width=200/>
 </p>
 
 <h2 align="center"> forayer</h2>
