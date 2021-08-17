@@ -58,6 +58,8 @@ select = "B,C,C4,E,F,W,T4,B9"
 count = "true"
 show-source = "true"
 statistics = "true"
+docstring_style = "numpy"
+strictness = "full"
 
 [tool.black]
 line-length = 88
