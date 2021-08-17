@@ -47,4 +47,4 @@ jobs:
         python -m pip install poetry
         poetry install -v
     - name: Check doc quality
-      run: poetry run pflake8 --select D forayer/
+      run: poetry run pflake8 --select "DAR,D102,103" --ignore "DAR103" forayer/
