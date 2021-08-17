@@ -3,27 +3,21 @@ from forayer.knowledge_graph import ClusterHelper
 
 
 def test_clusters_init():
-    link_dict = {"a1": "1", "a2": "2", "a3": "3"}
-    link_dict_with_ints = {"a1": 1, "a2": 2, "a3": 3}
-    clusters_from_dict = ClusterHelper(link_dict)
-    cluster_from_list_set = ClusterHelper([{a, b} for a, b in link_dict.items()])
-    clusters_from_dict_with_ints = ClusterHelper(link_dict_with_ints)
-    cluster_from_list_set_with_ints = ClusterHelper(
-        [{a, b} for a, b in link_dict_with_ints.items()]
-    )
+    clusters_1 = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
 
-    assert clusters_from_dict == cluster_from_list_set
-    assert clusters_from_dict == clusters_from_dict_with_ints
-    assert clusters_from_dict == cluster_from_list_set_with_ints
+    assert clusters_1.clusters == {0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
 
     # multiple
-    list_set = [{"a1", 1, 5}, {"a2", 2}, {"a3", 3}]
+    list_set = [{"a1", "b1", "b5"}, {"a2", "b2"}, {"a3", "b3"}]
     cluster_from_list_set_mult = ClusterHelper(list_set)
-    assert cluster_from_list_set_mult.links("a1") == {"1", "5"}
+    assert cluster_from_list_set_mult.links("a1") == {"b1", "b5"}
+
+    with pytest.raises(TypeError):
+        ClusterHelper([{"a1", 1}])
 
 
 def test_cluster_links():
-    clusters = ClusterHelper({"a1": "1", "a2": "2", "a3": "3"})
+    clusters = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
     assert clusters.links("a1") == "1"
     assert clusters.links("1") == "a1"
     with pytest.raises(KeyError):
@@ -31,24 +25,23 @@ def test_cluster_links():
 
 
 def test_cluster_members():
-    clusters = ClusterHelper({"a1": "1", "a2": "2", "a3": "3"})
+    clusters = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
     assert clusters.members(clusters["a1"]) == {"a1", "1"}
 
 
 def test_cluster_element_add():
-    clusters_1 = ClusterHelper({"a1": "1", "a2": "2", "a3": "3"})
-    clusters_1.add(("c1", "d"))
-    assert clusters_1.links("c1") == "d"
-    assert clusters_1.links("d") == "c1"
+    clusters_1 = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
+    clusters_1.add((clusters_1["a1"], "d"))
+    assert clusters_1.links("a1") == {"1", "d"}
 
-    clusters_2 = ClusterHelper({"a1": "1", "a2": "2", "a3": "3"})
-    clusters_2.add({"c1", "d"})
+    clusters_2 = ClusterHelper([{"a2", "2"}, {"a3", "3"}])
+    clusters_2.add({"a1", "1", "d"})
 
-    assert clusters_1 == clusters_2
+    assert clusters_1.links("a1") == clusters_2.links("a1")
 
 
 def test_cluster_element_remove():
-    clusters_1 = ClusterHelper({"a1": "1", "a2": "2", "a3": "3"})
+    clusters_1 = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
     clusters_1.remove("a1")
 
     with pytest.raises(KeyError):
