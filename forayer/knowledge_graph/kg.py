@@ -1,4 +1,6 @@
 """module containing knowledge graph class."""
+from __future__ import annotations
+
 from typing import Any, Dict, Set
 
 from forayer.transformation.word_embedding import AttributeVectorizer
@@ -47,12 +49,12 @@ class KG:
         self._inv_rel = inv_rel
         self.name = name
 
-    def neighbors(self, entity_id) -> Set[str]:
+    def neighbors(self, entity_id: str) -> Set[str]:
         """Get neighbors of an entity.
 
         Parameters
         ----------
-        entity_id :
+        entity_id: str
             id of entity of which we want the neighbors
 
         Returns
@@ -106,7 +108,7 @@ class AttributeEmbeddedKG(KG):
         super(AttributeEmbeddedKG, self).__init__(attr_embedded_entities, rel, name)
 
     @classmethod
-    def from_kg(cls, kg: KG, vectorizer: AttributeVectorizer):
+    def from_kg(cls, kg: KG, vectorizer: AttributeVectorizer) -> AttributeEmbeddedKG:
         """Initialize an attribute embedded KG object from a knowledge graph object.
 
         Parameters
@@ -115,6 +117,11 @@ class AttributeEmbeddedKG(KG):
             a pre-populated knowledge graph
         vectorizer: AttributeVectorizer
             an attribute vectorizer to use for retrieving the embeddings
+
+        Returns
+        -------
+        AttributeEmbeddedKG
+            the given KG with vectorized attribute values
         """
         return AttributeEmbeddedKG(
             entities=kg.entities, rel=kg.rel, vectorizer=vectorizer, name=kg.name

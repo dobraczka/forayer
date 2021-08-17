@@ -60,6 +60,13 @@ class AttributeVectorizer:
         default_download_dir: str
             directory where embeddings are downloaded if they are not present
             default is "./data/word_embeddings/"
+
+        Raises
+        ------
+        TypeError
+            if tokenizer is not callable
+        ValueError
+            if embedding_type is unknown or vectors_path does not exist
         """
         if tokenizer is None:
             self.tokenizer = tokenize

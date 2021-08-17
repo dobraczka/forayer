@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List
+
+from typing import TYPE_CHECKING, Any, Dict, List
 
 # avoid circular imports see: https://www.stefaanlippens.net/circular-imports-type-hints-python.html
 if TYPE_CHECKING:
@@ -8,7 +9,27 @@ if TYPE_CHECKING:
 
 
 class ERTask:
+    """Class to model entity resolution task on knowledge graphs.
+
+    Attributes
+    ----------
+    kgs_dict: Dict[str, KG]
+        dictionary of given KGs, with KG names as keys
+        KGs without names have their list index as key
+    clusters: ClusterHelper
+        known entity clusters
+    """
+
     def __init__(self, kgs: List[KG], clusters: ClusterHelper = None):
+        """Initialize an ERTask object.
+
+        Parameters
+        ----------
+        kgs : List[KG]
+            list of KGs that are to be integrated
+        clusters : ClusterHelper
+            known entity clusters
+        """
         kgs_dict = {}
         for cur_id, k in enumerate(kgs):
             if k.name is None:
@@ -18,7 +39,14 @@ class ERTask:
         self.clusters = clusters
         self.__inv_attr = None
 
-    def inverse_attr_dict(self):
+    def inverse_attr_dict(self) -> Dict[Any, Dict[str, str]]:
+        """Create an attributes dictionary with unique attribute values as key.
+
+        Returns
+        -------
+        Dict[Any, Dict[str,str]]
+            inverse attribute dict
+        """
         if self.__inv_attr is None:
             attr_to_kg_to_attr_name_to_ent = {}
             for kg_name, kg in self.kgs.items():

@@ -47,5 +47,11 @@ class OpenEADataset(Dataset):
         self.er_task = self.load()
 
     def load(self) -> ERTask:
-        """Load :class:`ERTask` object from raw files."""
+        """Load :class:`ERTask` object from raw files.
+
+        Returns
+        -------
+        ERTask
+            The er task created from the files
+        """
         return from_openea(self.download_folder)

@@ -90,7 +90,7 @@ def read_links(path: str) -> ClusterHelper:
 
     Returns
     -------
-    links: ClusterHelper
+    ClusterHelper
         ClusterHelper instance containing all links
 
     """
@@ -122,7 +122,7 @@ def create_kg(path: str, one_or_two: str, name: str) -> KG:
 
     Returns
     -------
-    kg: KG
+    KG
         knowledge graph object
     """
     attr_trip = read_attr_triples(os.path.join(path, f"attr_triples_{one_or_two}"))
@@ -140,7 +140,7 @@ def from_openea(path: str) -> ERTask:
 
     Returns
     -------
-    er_task: ERTask
+    ERTask
         er_task object
     """
     kg_names = _get_kg_name_from_path(path)
