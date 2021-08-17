@@ -15,7 +15,7 @@ on:
 
 
 jobs:
-  check_code_quality:
+  code_quality:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -33,5 +33,18 @@ jobs:
       run: black --config pyproject.toml --diff forayer/ tests/
     - name: Assess code quality
       run: poetry run pflake8 forayer/ tests/
+  doc_quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install poetry
+        poetry install -v
     - name: Check doc quality
       run: poetry run pflake8 --select D forayer/
