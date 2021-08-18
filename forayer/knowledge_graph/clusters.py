@@ -116,7 +116,6 @@ class ClusterHelper:
     def __repr__(self):
         return str(self.clusters)
 
-    @property
     def info(self):
         """Print general information about this object.
 

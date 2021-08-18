@@ -40,8 +40,8 @@ class ERTask:
         self.__inv_attr = None
 
     def __repr__(self):
-        kg_info = "{" + ",".join([k.info for _, k in self.kgs.items()]) + "}"
-        return self.__class__.__name__ + f"({kg_info},{str(self.clusters.info)})"
+        kg_info = "{" + ",".join([k.info() for _, k in self.kgs.items()]) + "}"
+        return self.__class__.__name__ + f"({kg_info},{str(self.clusters.info())})"
 
     def __getitem__(self, key):
         return self.kgs[key]
