@@ -153,4 +153,4 @@ def test_attribute_embedded_with_missing_embeddings(tmpdir):
         + ")"
     )
 
-    assert str(class_initialized_a_kg) == class_initialized_a_kg.info
+    assert str(class_initialized_a_kg) == class_initialized_a_kg.info()
