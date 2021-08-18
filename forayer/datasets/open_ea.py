@@ -1,5 +1,6 @@
 """OpenEA dataset class."""
 import os
+import pathlib
 
 from forayer.datasets.base_dataset import Dataset
 from forayer.io.from_to_open_ea import from_openea
@@ -37,14 +38,25 @@ class OpenEADataset(Dataset):
         self.ds_pair = ds_pair
         self.size = size
         self.version = version
+        BASE = pathlib.Path(__file__).parent.parent.parent.resolve()
         self.data_folder = (
-            data_folder if data_folder is not None else os.path.join("data", "open_ea")
+            data_folder
+            if data_folder is not None
+            else os.path.join(BASE, "data", "open_ea")
         )
         download_folder = os.path.join(
             self.data_folder, f"{self.ds_pair}_{self.size}_V{self.version}"
         )
         super(OpenEADataset, self).__init__(download_folder=download_folder)
         self.er_task = self.load()
+
+    def __repr__(self):
+        return (
+            self.__class__.__name__
+            + f"(ds_pair={self.ds_pair}, size={self.size}, version={self.version},"
+            f" data_folder={self.data_folder},"
+            f" download_folder={self.download_folder}, {self.er_task})"
+        )
 
     def load(self) -> ERTask:
         """Load :class:`ERTask` object from raw files.

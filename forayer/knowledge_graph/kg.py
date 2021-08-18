@@ -1,9 +1,14 @@
 """module containing knowledge graph class."""
 from __future__ import annotations
 
+import itertools
+import warnings
+from collections.abc import MutableMapping
+from pprint import pprint
 from typing import Any, Dict, Set
 
 from forayer.transformation.word_embedding import AttributeVectorizer
+from tqdm import tqdm
 
 
 class KG:
@@ -49,6 +54,51 @@ class KG:
         self._inv_rel = inv_rel
         self.name = name
 
+    def take(self, n: int) -> Dict[Any, Dict[Any, Any]]:
+        """Return n entities.
+
+        Iterates over entity dictionary and returns dictionary
+        with the first n entities that come up during iteration.
+
+        Parameters
+        ----------
+        n : int
+            number of entities to return
+
+        Returns
+        -------
+        Dict[Any, Dict[Any, Any]]
+            n entities from knowledge graph
+        """
+        return {
+            ent_id: attr_dict
+            for ent_id, attr_dict in itertools.islice(self.entities.items(), n)
+        }
+
+    def __getitem__(self, key: str) -> Dict[Any, Any]:
+        """Return attributes of entity with key.
+
+        Syntactic sugar for self.entities[key]
+
+        Parameters
+        ----------
+        key: str
+            entity id
+
+        Returns
+        -------
+        Dict[Any,Any]
+            attributes of entity
+        """
+        return self.entities[key]
+
+    def __setitem__(self, key, value):
+        """Not implemented."""
+        raise NotImplementedError
+
+    def __repr__(self):
+        return pprint(vars(self))
+
     def neighbors(self, entity_id: str) -> Set[str]:
         """Get neighbors of an entity.
 
@@ -71,6 +121,32 @@ class KG:
         except KeyError:
             n_to_left = set()
         return n_to_right.union(n_to_left)
+
+    @property
+    def info(self) -> str:
+        """Print general information about this object.
+
+        Returns
+        -------
+        str
+            information about number of entities, attributes and values
+        """
+        num_ent = len(self.entities.keys())
+        num_attr_name = len(self.entities.values())
+        num_attr_values = len(
+            {
+                attr_value
+                for _, attr_dict in self.entities.items()
+                for _, attr_value in attr_dict.items()
+            }
+        )
+        num_ent_rel = len(set(self.rel.keys()).union(set(self._inv_rel.keys())))
+        name = "KG" if self.name is None else self.name
+        return (
+            f"{name}: (# entities_with_rel: {num_ent_rel}, # rel: {len(self.rel)}, #"
+            f" entities_with_attributes: {num_ent}, # attributes: {num_attr_name}, #"
+            f" attr_values: {num_attr_values})"
+        )
 
 
 class AttributeEmbeddedKG(KG):
@@ -101,11 +177,42 @@ class AttributeEmbeddedKG(KG):
             name of the kg, default is None
         """
         self.vectorizer = vectorizer
+        self.vectorizer.reset_token_count()
         attr_embedded_entities = {
             e_id: self.vectorizer.vectorize_entity_attributes(ent_attr)
-            for e_id, ent_attr in entities.items()
+            for e_id, ent_attr in tqdm(entities.items(), desc="Vectorizing attributes")
         }
+        if self.vectorizer.ignored_tokens > 0:
+            warnings.warn(
+                f"{self.vectorizer.ignored_tokens}/{self.vectorizer.seen_tokens} tokens"
+                " have no pre-trained embedding and were replaced by np.NaN"
+            )
+        self._ignored = self.vectorizer.ignored_tokens
+        self._seen = self.vectorizer.seen_tokens
         super(AttributeEmbeddedKG, self).__init__(attr_embedded_entities, rel, name)
+
+    def __repr__(self):
+        return self.info
+
+    @property
+    def info(self) -> str:
+        """Print general information about this object.
+
+        Returns
+        -------
+        str
+            information about number of entities, attributes and embedded attributes
+        """
+        num_ent = len(self.entities.keys())
+        num_attr_name = len(self.entities.values())
+        num_ent_rel = len(set(self.rel.keys()).union(set(self._inv_rel.keys())))
+        name = "KG" if self.name is None else self.name
+        return (
+            f"{name}: (# entities_with_rel: {num_ent_rel}, # rel: {len(self.rel)}, #"
+            f" entities_with_attributes: {num_ent}, # attributes: {num_attr_name},"
+            f" {self._ignored}/{self._seen} tokens"
+            " have no pre-trained embedding and were replaced by np.NaN)"
+        )
 
     @classmethod
     def from_kg(cls, kg: KG, vectorizer: AttributeVectorizer) -> AttributeEmbeddedKG:

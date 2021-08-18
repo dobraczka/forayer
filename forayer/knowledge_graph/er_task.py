@@ -39,6 +39,13 @@ class ERTask:
         self.clusters = clusters
         self.__inv_attr = None
 
+    def __repr__(self):
+        kg_info = "{" + ",".join([k.info for _, k in self.kgs.items()]) + "}"
+        return self.__class__.__name__ + f"({kg_info},{str(self.clusters.info)})"
+
+    def __getitem__(self, key):
+        return self.kgs[key]
+
     def inverse_attr_dict(self) -> Dict[Any, Dict[str, str]]:
         """Create an attributes dictionary with unique attribute values as key.
 

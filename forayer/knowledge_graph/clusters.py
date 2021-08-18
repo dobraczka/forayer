@@ -116,6 +116,22 @@ class ClusterHelper:
     def __repr__(self):
         return str(self.clusters)
 
+    @property
+    def info(self):
+        """Print general information about this object.
+
+        Returns
+        -------
+        str
+            information about number of entities and clusters
+        """
+        num_elements = len(self.elements)
+        num_clusters = len(self.clusters)
+        return (
+            self.__class__.__name__
+            + f"(# elements:{num_elements}, # clusters:{num_clusters})"
+        )
+
     def links(self, key: str) -> Union[str, Set[str]]:
         """Get entities linked to this entity.
 

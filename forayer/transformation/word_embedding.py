@@ -1,6 +1,6 @@
 """Module concerned with utilizing word embeddings."""
+import logging
 import os
-from pathlib import Path
 from typing import Any, Callable, Dict, List
 from zipfile import ZipFile
 
@@ -8,7 +8,6 @@ import numpy as np
 import wget
 from gensim.models import KeyedVectors
 from gensim.models.fasttext import load_facebook_model
-from gensim.scripts.glove2word2vec import glove2word2vec
 from gensim.utils import tokenize
 
 _EMBEDDING_INFO = {
@@ -94,6 +93,14 @@ class AttributeVectorizer:
         )
         self._download_embeddings_if_needed()
         self.wv = self._load_embeddings()
+        self.vocab = {}
+        self.seen_tokens = 0
+        self.ignored_tokens = 0
+
+    def reset_token_count(self):
+        """Reset .seen_tokens and .ignored_tokens."""
+        self.seen_tokens = 0
+        self.ignored_tokens = 0
 
     def _download_embeddings_if_needed(self):
         if self.vectors_path is None:
@@ -103,6 +110,9 @@ class AttributeVectorizer:
             if not os.path.exists(embeddings_dir):
                 os.makedirs(embeddings_dir)
             dl_url, zip_name, embedding_file = _EMBEDDING_INFO[self.embedding_type]
+            logging.info(
+                f"Downloading {self.embedding_type} embeddings to {embeddings_dir}"
+            )
             wget.download(dl_url, embeddings_dir)
             with ZipFile(os.path.join(embeddings_dir, zip_name), "r") as zip_obj:
                 zip_obj.extractall(embeddings_dir)
@@ -110,6 +120,7 @@ class AttributeVectorizer:
             self.vectors_path = os.path.join(embeddings_dir, embedding_file)
 
     def _load_embeddings(self):
+        logging.info("Loading word embeddings")
         if self.embedding_type == "fasttext":
             return load_facebook_model(self.vectors_path).wv
         try:
@@ -132,9 +143,24 @@ class AttributeVectorizer:
         Returns
         -------
         vectorized: List[np.ndarray]
-            List of token embeddings
+            List of token embeddings,
+
+        Notes
+        -----
+        Ignores tokens that are not contained in the used embeddings
+        Ignored tokens will be set to np.NaN
         """
-        return [self.wv[word] for word in self.tokenizer(sentence)]
+        vectorized = []
+        _number_of_tokens = 0  # initialize before in case loop is not executed
+        for _number_of_tokens, word in enumerate(self.tokenizer(sentence), start=1):
+            if word in self.wv:
+                vectorized.append(self.wv[word])
+            else:
+                vectorized.append(np.NaN)
+                self.ignored_tokens += 1
+                logging.debug(f"Did not find embedding for {word}, ignoring")
+        self.seen_tokens += _number_of_tokens
+        return vectorized
 
     def vectorize_entity_attributes(
         self, attributes: Dict[Any, Any]
@@ -148,8 +174,8 @@ class AttributeVectorizer:
 
         Returns
         -------
-        embedded_entity_attributes: Dict[Any,List[np.ndarray]]
-            replaces attribute values with list of token embeddings
+        embedded_entity_attributes: Dict[Any, List[np.ndarray]]
+            entity dicts with attribute values replaced with list of token embeddings
         """
         return {
             attr_name: self.vectorize(attr_value)
