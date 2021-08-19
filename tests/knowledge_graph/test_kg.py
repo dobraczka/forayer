@@ -14,6 +14,7 @@ def test_basic():
     }
     kg = KG(entities, {"e1": {"e3": "somerelation"}})
     assert kg["e1"] == kg.entities["e1"]
+    assert kg[["e1", "e2", "e3"]] == entities
 
     assert kg.take(3) == kg.entities
 
@@ -26,15 +27,41 @@ def test_neighbors():
     }
     kg = KG(entities, {"e1": {"e3": "somerelation"}})
 
-    assert kg.neighbors("e1") == {"e3"}
-    assert kg.neighbors("e3") == {"e1"}
+    assert kg.neighbors("e1", only_id=True) == {"e3"}
+    assert kg.neighbors("e3", only_id=True) == {"e1"}
 
     kg_dual_rel = KG(
         entities, {"e1": {"e3": "somerelation"}, "e3": {"e1": "other_rel"}}
     )
 
-    assert kg_dual_rel.neighbors("e1") == {"e3"}
-    assert kg_dual_rel.neighbors("e3") == {"e1"}
+    assert kg_dual_rel.neighbors("e1", only_id=True) == {"e3"}
+    assert kg_dual_rel.neighbors("e3", only_id=True) == {"e1"}
+
+
+def test_search():
+    e1 = ("e1", {"a1": "first entity", "a2": 123})
+    e2 = ("e2", {"a1": "second ent"})
+    e3 = ("e3", {"a2": 124})
+    entities = {e_id: val for e_id, val in [e1, e2, e3]}
+    kg = KG(entities, {"e1": {"e3": "somerelation"}})
+
+    assert kg.search("first entity") == {e1[0]: e1[1]}
+    assert kg.search("first entity", attr=None) == {e1[0]: e1[1]}
+    assert kg.search("first entity", attr="a1") == {e1[0]: e1[1]}
+    assert kg.search("first entity", attr=["a1"]) == {e1[0]: e1[1]}
+
+    assert kg.search("first") == {e1[0]: e1[1]}
+    assert kg.search("first", attr=None) == {e1[0]: e1[1]}
+    assert kg.search("first", attr="a1") == {e1[0]: e1[1]}
+    assert kg.search("first", attr=["a1"]) == {e1[0]: e1[1]}
+    assert kg.search("first", attr="a2") == {}
+
+    assert kg.search("first", exact=True) == {}
+
+    assert kg.search(124, attr="a2") == {e3[0]: e3[1]}
+    assert kg.search("124", attr="a2") == {e3[0]: e3[1]}
+    assert kg.search("124") == {e3[0]: e3[1]}
+    assert kg.search(124) == {e3[0]: e3[1]}
 
 
 def test_attribute_embedded(tmpdir):
