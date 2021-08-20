@@ -4,6 +4,8 @@ import pytest
 from forayer.knowledge_graph import KG, AttributeEmbeddedKG
 from forayer.transformation.word_embedding import AttributeVectorizer
 from numpy.testing import assert_array_equal
+from rdflib import Literal, URIRef
+from rdflib.namespace import FOAF
 
 
 def test_basic():
@@ -181,3 +183,57 @@ def test_attribute_embedded_with_missing_embeddings(tmpdir):
     )
 
     assert str(class_initialized_a_kg) == class_initialized_a_kg.info()
+
+
+EXPECTED_TRIPLES = {
+    (URIRef("e1"), URIRef("a1"), Literal("first entity")),
+    (URIRef("e1"), URIRef("a2"), Literal(123)),
+    (URIRef("e2"), URIRef("a1"), Literal("second ent")),
+    (URIRef("e3"), URIRef("a2"), Literal(124)),
+    (URIRef("e3"), URIRef("a2"), Literal("1223")),
+    (URIRef("e1"), URIRef("somerelation"), URIRef("e3")),
+}
+
+EXPECTED_TRIPLES_PREFIXED = {
+    (
+        URIRef("https://test.org/e1"),
+        URIRef("http://xmlns.com/foaf/0.1/name"),
+        Literal("first entity"),
+    ),
+    (URIRef("https://test.org/e1"), URIRef("https://testattr.org/"), Literal(123)),
+    (
+        URIRef("https://test.org/e2"),
+        URIRef("http://xmlns.com/foaf/0.1/name"),
+        Literal("second ent"),
+    ),
+    (URIRef("https://test.org/e3"), URIRef("https://testattr.org/"), Literal(124)),
+    (URIRef("https://test.org/e3"), URIRef("https://testattr.org/"), Literal("1223")),
+    (
+        URIRef("https://test.org/e1"),
+        URIRef("http://xmlns.com/foaf/0.1/knows"),
+        URIRef("https://test.org/e3"),
+    ),
+}
+
+
+def test_to_rdflib():
+    entities = {
+        "e1": {"a1": "first entity", "a2": 123},
+        "e2": {"a1": "second ent"},
+        "e3": {"a2": {124, "1223"}},
+    }
+    kg = KG(entities, {"e1": {"e3": "somerelation"}})
+    rdf_g = kg.to_rdflib()
+
+    assert set(rdf_g) == set(EXPECTED_TRIPLES)
+
+    rdf_g = kg.to_rdflib(
+        prefix="https://test.org/",
+        attr_mapping={
+            "a1": FOAF.name,
+            "a2": "https://testattr.org/",
+            "somerelation": FOAF.knows,
+        },
+    )
+
+    assert set(rdf_g) == set(EXPECTED_TRIPLES_PREFIXED)

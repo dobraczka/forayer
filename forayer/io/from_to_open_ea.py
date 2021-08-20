@@ -1,5 +1,6 @@
 """IO module for OpenEA data."""
 import os
+from collections import defaultdict
 from typing import Dict
 
 from forayer.knowledge_graph import KG, ClusterHelper, ERTask
@@ -31,12 +32,10 @@ def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, str]]:
         Entity and attribute dictionary
 
     """
-    ent_attr_dict = {}
+    ent_attr_dict = defaultdict(dict)
     with open(path, "r") as in_file:
         for line in in_file:
             e_id, prop, value = _get_cleaned_split(line, delimiter)
-            if e_id not in ent_attr_dict:
-                ent_attr_dict[e_id] = {}
             ent_attr_dict[e_id][prop] = value
     return ent_attr_dict
 
@@ -61,12 +60,10 @@ def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, str]]:
         Dictionary containing relation triples with subjects as key
         of outer dict
     """
-    rel_dict = {}
+    rel_dict = defaultdict(dict)
     with open(path, "r") as in_file:
         for line in in_file:
             left_id, rel, right_id = _get_cleaned_split(line, delimiter)
-            if left_id not in rel_dict:
-                rel_dict[left_id] = {}
             rel_dict[left_id][right_id] = rel
     return rel_dict
 

@@ -8,6 +8,7 @@ from pprint import pprint
 from typing import Any, Dict, List, Set, Union
 
 from forayer.transformation.word_embedding import AttributeVectorizer
+from rdflib import Graph, Literal, URIRef
 from tqdm import tqdm
 
 
@@ -215,6 +216,74 @@ class KG:
             f" entities_with_attributes: {num_ent}, # attributes: {num_attr_name}, #"
             f" attr_values: {num_attr_values})"
         )
+
+    def to_rdflib(self, prefix: str = "", attr_mapping: dict = None):
+        """Transform to rdflib graph.
+
+        Parameters
+        ----------
+        prefix : str
+            Prefix to prepend to each entity id
+        attr_mapping : dict
+            Mapping of attribute names to URIs.
+            Mapping values can be str or :class:`rdflib.term.URIRef`.
+            This is also used to map relation predicates.
+
+        Returns
+        -------
+        rdf_g
+            rdflib Graph
+
+        Examples
+        --------
+        >>> entities = {
+            "e1": {"a1": "first entity", "a2": 123},
+            "e2": {"a1": "second ent"},
+            "e3": {"a2": {124, "1223"}},
+        }
+        >>> kg = KG(entities, {"e1": {"e3": "somerelation"}})
+        >>> rdf_g = kg.to_rdflib()
+        >>> from rdflib import URIRef
+        >>> rdf_g.value(URIRef("e1"), URIRef("a1"))
+        rdflib.term.Literal('first entity')
+
+        You can use custom prefixes and rdflib namespaces or strings for mappings
+        >>> my_prefix = "http://example.org/"
+        >>> my_mapping = {"a1":FOAF.name, "a2":"http://example.org/attr"}
+        >>> rdf_g = kg.to_rdflib(prefix=my_prefix,attr_mapping=my_mapping)
+        >>> rdf_g.value(URIRef(my_prefix + "e1"), FOAF.name)
+        rdflib.term.Literal('first entity')
+        """
+
+        def get_predicate(raw, attr_mapping):
+            substitute = attr_mapping.get(raw, raw)
+            if isinstance(substitute, URIRef):
+                return substitute
+            return URIRef(substitute)
+
+        rdf_g = Graph()
+        if attr_mapping is None:
+            attr_mapping = {}
+        for e_id, attr_dict in tqdm(
+            self.entities.items(), desc="Transforming entities"
+        ):
+            for attr_name, attr_value in attr_dict.items():
+                subject = URIRef(prefix + e_id)
+                predicate = get_predicate(attr_name, attr_mapping)
+                if isinstance(attr_value, (set, list)):
+                    for inner_attr_val in attr_value:
+                        object = Literal(inner_attr_val)
+                        rdf_g.add((subject, predicate, object))
+                else:
+                    object = Literal(attr_value)
+                    rdf_g.add((subject, predicate, object))
+        for left_id, right_id_rel in self.rel.items():
+            for right_id, rel in right_id_rel.items():
+                subject = URIRef(prefix + left_id)
+                predicate = get_predicate(rel, attr_mapping)
+                object = URIRef(prefix + right_id)
+                rdf_g.add((subject, predicate, object))
+        return rdf_g
 
 
 class AttributeEmbeddedKG(KG):
