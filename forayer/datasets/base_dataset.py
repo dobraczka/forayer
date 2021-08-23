@@ -1,62 +1,100 @@
 """base classes for datasets."""
 import os
+import pathlib
 import shutil
 from abc import abstractmethod
+from typing import List, Tuple
 from zipfile import ZipFile
 
 import wget
 
 
 class Dataset:
-    """base class for dataset classes."""
+    """Base class for dataset classes."""
 
-    def __init__(self, download_folder: str):
+    DS_NAME = ""
+
+    @abstractmethod
+    def load(self):
+        """Load and prepare the dataset object from the files."""
+        pass
+
+
+class RemoteDataset(Dataset):
+    """Base class for dataset with remote files."""
+
+    def __init__(self, download_urls: List[Tuple[str, str]], data_folder: str = None):
+        """Initialize a dataset object.
+
+        Parameters
+        ----------
+        download_urls : List[Tuples(str, str)]
+            List of tuples with (url, target_file_name)
+        data_folder : str
+            folder path where raw data is stored.
+            If NONE, stores in "forayer_root/data/self.__class__.DS_NAME"
+        """
+        # get root of project
+        project_root = pathlib.Path(__file__).parent.parent.parent.resolve()
+        self.data_folder = (
+            data_folder
+            if data_folder is not None
+            else os.path.join(project_root, "data", self.__class__.DS_NAME)
+        )
+        self.download_urls = download_urls
+
+    def download(self) -> bool:
+        """Download files and create download dir if necessary.
+
+        Returns
+        -------
+        bool
+            True if download was needed.
+        """
+        if not os.path.exists(self.data_folder):
+            print(
+                f"Downloading {self.__class__.__name__} datasets to {self.data_folder}"
+            )
+            os.makedirs(self.data_folder)
+            for url, target in self.download_urls:
+                wget.download(url, os.path.join(self.data_folder, target))
+            return True
+        return False
+
+
+class ZipDataset(RemoteDataset):
+    """Base class for datasets that have remote zipped raw files."""
+
+    def __init__(self, data_folder: str, download_urls: List[Tuple[str, str]]):
         """Initialize a dataset object.
 
         Downloads and unzips necessary data
 
         Parameters
         ----------
-        download_folder : str
+        download_urls : List[Tuples(str, str)]
+            List of tuples with (url, target_file_name)
+        data_folder : str
             folder path where raw data is stored
         """
-        self.download_folder = download_folder
+        super(ZipDataset, self).__init__(download_urls, data_folder)
         self.download_and_unzip()
 
-    @abstractmethod
-    def load(self):
-        """Load and prepare the dataset object from the downloaded files."""
-        pass
+    def download_and_unzip(self) -> bool:
+        """Download and unzip files to download folder if needed.
 
-    def _get_download_dir(self):
-        if self.download_folder.endswith(os.sep):
-            return os.path.split(os.path.split(self.download_folder)[0])[0]
-        return os.path.split(self.download_folder)[0]
-
-    def download_and_unzip(self):
-        """Download and unzip files to download folder if needed."""
-        if not os.path.exists(self.download_folder):
-            target_dir = self._get_download_dir()
-            # make sure download dir is present
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
+        Returns
+        -------
+        bool
+            True if download was needed.
+        """
+        if self.download():
             # get zip file paths
-            zip_dirs = [os.path.join(target_dir, z) for z in self.__class__._zip_names]
-            print(f"Downloading {self.__class__.__name__} datasets to {zip_dirs}")
-            for zip_dir, dl_url, zip_name in zip(
-                zip_dirs, self.__class__._download_urls, self.__class__._zip_names
-            ):
-                wget.download(dl_url, zip_dir)
+            for _, zip_name in self.download_urls:
+                zip_dir = os.path.join(self.data_folder, zip_name)
                 with ZipFile(zip_dir, "r") as zip_obj:
-                    zip_obj.extractall(target_dir)
-                    # move to wanted dir
-                    # TODO what if top level folder is not named like the zip file
-                    unpacked_zip = os.path.join(
-                        target_dir, zip_name.replace(".zip", "")
-                    )
-                    file_names = os.listdir(unpacked_zip)
-                    for file_name in file_names:
-                        shutil.move(os.path.join(unpacked_zip, file_name), target_dir)
+                    zip_obj.extractall(self.data_folder)
                 # cleanup
                 os.remove(zip_dir)
-                os.rmdir(unpacked_zip)
+            return True
+        return False
