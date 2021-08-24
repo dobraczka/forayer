@@ -2,7 +2,7 @@ import datetime
 import os
 import pathlib
 
-from forayer.io.from_to_semantic import load_from_triples
+from forayer.io.from_to_rdf import load_from_triples
 
 
 def test_from_rdf():

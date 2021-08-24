@@ -4,7 +4,7 @@ import os
 from collections import namedtuple
 
 from forayer.datasets.base_dataset import RemoteDataset
-from forayer.io.from_to_semantic import load_from_triples
+from forayer.io.from_to_rdf import load_from_triples
 from forayer.knowledge_graph import ClusterHelper, ERTask
 from rdflib import Graph
 from tqdm import tqdm
