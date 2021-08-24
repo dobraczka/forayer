@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import itertools
 import warnings
-from collections.abc import MutableMapping
 from pprint import pprint
 from typing import Any, Dict, List, Set, Union
 
@@ -17,18 +16,18 @@ class KG:
 
     def __init__(
         self,
-        entities: Dict[Any, Dict[Any, Any]],
-        rel: Dict[Any, Dict[Any, Any]] = None,
+        entities: Dict[str, Dict[Any, Any]],
+        rel: Dict[str, Dict[str, Any]] = None,
         name: str = None,
     ):
         """Initialize a KG object.
 
         Parameters
         ----------
-        entities : Dict[Any, Dict[Any, Any]]
+        entities : Dict[str, Dict[Any, Any]]
             entity information with entity ids as keys and a attribute dictionaries as values
             attribute dictionaries have attribute id as key and attribute value as dict value
-        rel : Dict[Any, Dict[Any, Any]]
+        rel : Dict[str, Dict[str, Any]]
             relation triples with one entity as key, value is dict with other entity as key
             and relation id as value
         name : str, optional
@@ -169,7 +168,7 @@ class KG:
         raise NotImplementedError
 
     def __repr__(self):
-        return pprint(vars(self))
+        return f"KG(entities={self.entities}, rel={self.rel}, name={self.name})"
 
     def neighbors(
         self, entity_id: str, only_id: bool = False

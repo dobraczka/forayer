@@ -5,7 +5,7 @@ import pathlib
 from forayer.io.from_to_semantic import load_from_triples
 
 
-def test_from_semantic():
+def test_from_rdf():
     test_data_folder = os.path.join(
         pathlib.Path(__file__).parent.parent.resolve(), "test_data"
     )
