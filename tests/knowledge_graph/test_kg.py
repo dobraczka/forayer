@@ -14,11 +14,15 @@ def test_basic():
         "e2": {"a1": "second ent"},
         "e3": {"a2": 124},
     }
-    kg = KG(entities, {"e1": {"e3": "somerelation"}})
+    rel = {"e1": {"e3": "somerelation"}}
+    kg = KG(entities=entities, rel=rel, name="kg1")
     assert kg["e1"] == kg.entities["e1"]
     assert kg[["e1", "e2", "e3"]] == entities
 
     assert kg.take(3) == kg.entities
+
+    kg2 = KG(entities=entities, rel=rel, name="kg1")
+    assert kg == kg2
 
 
 def test_neighbors():

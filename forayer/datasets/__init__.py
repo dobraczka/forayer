@@ -1,4 +1,5 @@
-from forayer.datasets.base_dataset import Dataset
+"""Make dataset classes available."""
+from forayer.datasets.oaei_kg import OAEIKGDataset
 from forayer.datasets.open_ea import OpenEADataset
 
-__all__ = ["Dataset", "OpenEADataset"]
+__all__ = ["OpenEADataset", "OAEIKGDataset"]

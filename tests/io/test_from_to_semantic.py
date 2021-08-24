@@ -1,10 +1,15 @@
 import datetime
+import os
+import pathlib
 
 from forayer.io.from_to_semantic import load_from_triples
 
 
 def test_from_semantic():
-    kg = load_from_triples("tests/data/test.ttl")
+    test_data_folder = os.path.join(
+        pathlib.Path(__file__).parent.parent.resolve(), "test_data"
+    )
+    kg = load_from_triples(os.path.join(test_data_folder, "test.ttl"))
     assert kg["http://example.org/#spiderman"][
         "http://xmlns.com/foaf/0.1/birthday"
     ] == datetime.date(year=1963, month=8, day=10)

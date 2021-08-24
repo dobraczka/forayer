@@ -10,6 +10,9 @@ from tqdm import tqdm
 
 
 def cast_to_python_type(lit):
+    if lit.datatype is not None and "langString" in lit.datatype:
+        # lang strings are not automatically cast
+        return str(lit)
     return lit.toPython()
 
 
@@ -54,7 +57,7 @@ def load_from_triples(
     if multi_value is None:
         multi_value = add_multi_value
     g = Graph()
-    logging.info(f"Reading graph from {in_path}")
+    logging.info(f"Reading graph from {in_path}. This might take a while...")
     g.parse(in_path, format=format)
     entities = defaultdict(dict)
     rel = defaultdict(dict)

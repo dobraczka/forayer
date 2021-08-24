@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:ns1="http://www.w3.org/2004/02/skos/core#"
+   xmlns:ns2="http://purl.org/dc/terms/"
+   xmlns:ns3="http://dbkwik.webdatacommons.org/ontology/"
+   xmlns:ns4="http://xmlns.com/foaf/0.1/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+>
+  <rdf:Description rdf:about="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Verillian">
+    <ns4:depiction rdf:resource="http://memory-beta.wikia.com/wiki/Special:FilePath/Veril.png"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Avatar,_Book_One"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Farrakk"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Verillia"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/2268"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Metron_Consortium"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Provenance_of_Shadows"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Civil_war"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Novel"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Episode"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Risa"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Hagath"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Business_as_Usual"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/2373"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Crucible"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Elias_Vaughn"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Star_Trek:_The_Original_Series"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Pentabo"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Category:Alpha_and_Beta_Quadrant_races_and_cultures"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Joanna_McCoy"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Mission_Gamma"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Jenli"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Star_Trek:_Deep_Space_Nine"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Twilight_(novel)"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Category:Races_and_cultures"/>
+    <rdf:type rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/class/n"/>
+    <ns3:wikiPageWikiLinkText rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString">Verillian</ns3:wikiPageWikiLinkText>
+    <ns2:subject rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Category:Races_and_cultures"/>
+    <ns2:subject rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Category:Alpha_and_Beta_Quadrant_races_and_cultures"/>
+    <ns3:abstract xml:lang="en">The Verillians are a species from the planet Verillia.
+Joanna McCoy lived in the city of Pentabo on Verillia in the year 2268 and became fond of a beverage called jenli and Verillian literature. (TOS - Crucible novel: Provenance of Shadows)
+A destructive civil war once occurred among the Verillians and left behind many orphaned children. Elias Vaughn once visited Pentabo on Verillia, where he saw several of these orphaned and starving Verillian children living among the ruins of the city. (DS9 novel: Avatar, Book One, DS9 - Mission Gamma novel: Twilight)
+In 2373, the Verillians signed an agreement with the Metron Consortium. Hagath's associate Farrakk was to have also negotiated with the Verillians to get the agreement to sell weapons, although he decided to travel to Risa instead. (DS9 episode: "Business as Usual")
+
+</ns3:abstract>
+    <rdfs:label rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString">Verillian</rdfs:label>
+    <ns1:altLabel rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString">Verillian</ns1:altLabel>
+    <rdfs:comment xml:lang="en">The Verillians are a species from the planet Verillia.
+Joanna McCoy lived in the city of Pentabo on Verillia in the year 2268 and became fond of a beverage called jenli and Verillian literature. (TOS - Crucible novel: Provenance of Shadows)
+A destructive civil war once occurred among the Verillians and left behind many orphaned children. Elias Vaughn once visited Pentabo on Verillia, where he saw several of these orphaned and starving Verillian children living among the ruins of the city. (DS9 novel: Avatar, Book One, DS9 - Mission Gamma novel: Twilight)
+</rdfs:comment>
+  </rdf:Description>
+</rdf:RDF>

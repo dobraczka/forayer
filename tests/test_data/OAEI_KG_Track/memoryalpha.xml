@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:ns1="http://www.w3.org/2004/02/skos/core#"
+   xmlns:ns2="http://purl.org/dc/terms/"
+   xmlns:ns3="http://dbkwik.webdatacommons.org/ontology/"
+   xmlns:ns4="http://xmlns.com/foaf/0.1/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+>
+  <rdf:Description rdf:about="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Verillian">
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Farrakk"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/2373"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Business_as_Usual_(episode)"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Hagath"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Metron_Consortium"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Star_Trek:_Deep_Space_Nine"/>
+    <ns3:wikiPageWikiLink rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Category:Groups"/>
+    <ns1:altLabel rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString">Verillian</ns1:altLabel>
+    <ns4:depiction rdf:resource="http://memory-alpha.wikia.com/wiki/Special:FilePath/Verifier.jpg"/>
+    <rdfs:comment xml:lang="en">The Verillians were a group who signed an agreement with the Metron Consortium in 2373. Hagath had also been interested in the deal, but his associate Farrakk didn't even open negotiations. (: "")
+
+
+</rdfs:comment>
+    <ns2:subject rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Category:Groups"/>
+    <rdfs:label rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString">Verillian</rdfs:label>
+    <ns3:abstract xml:lang="en">The Verillians were a group who signed an agreement with the Metron Consortium in 2373. Hagath had also been interested in the deal, but his associate Farrakk didn't even open negotiations. (: "")
+
+
+</ns3:abstract>
+    <ns3:wikiPageWikiLinkText rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString">Verillian</ns3:wikiPageWikiLinkText>
+    <rdf:type rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/class/bginfo"/>
+  </rdf:Description>
+</rdf:RDF>

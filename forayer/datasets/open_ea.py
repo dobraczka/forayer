@@ -44,7 +44,8 @@ class OpenEADataset(ZipDataset):
         self.ds_pair = ds_pair
         self.size = size
         self.version = version
-        self.er_task = self.load()
+        self.download_and_unzip()
+        self.er_task = self._load()
 
     def __repr__(self):
         return (
@@ -53,7 +54,7 @@ class OpenEADataset(ZipDataset):
             f" data_folder={self.data_folder}, {self.er_task})"
         )
 
-    def load(self) -> ERTask:
+    def _load(self) -> ERTask:
         """Load :class:`ERTask` object from raw files.
 
         Returns

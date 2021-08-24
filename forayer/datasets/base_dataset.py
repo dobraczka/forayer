@@ -1,8 +1,6 @@
 """base classes for datasets."""
 import os
 import pathlib
-import shutil
-from abc import abstractmethod
 from typing import List, Tuple
 from zipfile import ZipFile
 
@@ -13,11 +11,6 @@ class Dataset:
     """Base class for dataset classes."""
 
     DS_NAME = ""
-
-    @abstractmethod
-    def load(self):
-        """Load and prepare the dataset object from the files."""
-        pass
 
 
 class RemoteDataset(Dataset):
@@ -43,8 +36,11 @@ class RemoteDataset(Dataset):
         )
         self.download_urls = download_urls
 
-    def download(self) -> bool:
+    def download(self, check_files=False) -> bool:
         """Download files and create download dir if necessary.
+
+        check_files: bool
+            Instead of checking for data_folder check individual files.
 
         Returns
         -------
@@ -57,8 +53,20 @@ class RemoteDataset(Dataset):
             )
             os.makedirs(self.data_folder)
             for url, target in self.download_urls:
-                wget.download(url, os.path.join(self.data_folder, target))
+                target_file_path = os.path.join(self.data_folder, target)
+                print(f"Downloading {url} to {target_file_path}")
+                wget.download(url, target_file_path)
             return True
+        elif check_files:
+            at_least_one = False
+            for url, target in self.download_urls:
+                target_file_path = os.path.join(self.data_folder, target)
+                if not os.path.exists(target_file_path):
+                    at_least_one = True
+                    print(f"Downloading {url} to {target_file_path}")
+                    wget.download(url, target_file_path)
+            if at_least_one:
+                return True
         return False
 
 
@@ -78,7 +86,6 @@ class ZipDataset(RemoteDataset):
             folder path where raw data is stored
         """
         super(ZipDataset, self).__init__(download_urls, data_folder)
-        self.download_and_unzip()
 
     def download_and_unzip(self) -> bool:
         """Download and unzip files to download folder if needed.

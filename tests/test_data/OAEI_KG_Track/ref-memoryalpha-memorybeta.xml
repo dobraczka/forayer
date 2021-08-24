@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+   xmlns:ns1="http://knowledgeweb.semanticweb.org/heterogeneity/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+>
+  <rdf:Description rdf:nodeID="N94e736c0fa86438ebae2769d35b89e8a">
+    <ns1:alignmententity2 rdf:resource="http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Verillian"/>
+    <ns1:alignmententity1 rdf:resource="http://dbkwik.webdatacommons.org/memory-alpha.wikia.com/resource/Verillian"/>
+  </rdf:Description>
+</rdf:RDF>

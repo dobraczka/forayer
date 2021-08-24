@@ -55,6 +55,15 @@ class KG:
         self._inv_rel = inv_rel
         self.name = name
 
+    def __eq__(self, other):
+        if isinstance(other, KG):
+            return (
+                self.entities == other.entities
+                and self.rel == self.rel
+                and self.name == other.name
+            )
+        return False
+
     def search(self, query, attr=None, exact=False):
         """Search for entities with specific attribute value.
 
