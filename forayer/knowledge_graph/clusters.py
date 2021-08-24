@@ -64,7 +64,7 @@ class ClusterHelper:
                 inner_set.add(inner_element)
             self.clusters[cluster_id] = inner_set
 
-    def _from_dict(self, data: Dict[Union[str, int], Union[str, int]]):
+    def _from_dict(self, data: Dict[str, str]):
         for cluster_id, dict_items in enumerate(data.items()):
             left, right = dict_items
             if not isinstance(left, str):
@@ -83,8 +83,8 @@ class ClusterHelper:
     def __init__(
         self,
         data: Union[
-            List[Set[Union[str, int]]],
-            Dict[Union[str, int], Union[str, int]],
+            List[Set[str]],
+            Dict[str, str],
         ] = None,
     ):
         """Initialize a ClusterHelper object with clusters.
@@ -93,7 +93,7 @@ class ClusterHelper:
         ----------
         data : Union[
                     List[Set[str]],
-                    Dict[Union[str, int], Union[str, int]],
+                    Dict[str, str],
                 ]
             Clusters either as list of sets, or dict with
             links as key, value pairs
