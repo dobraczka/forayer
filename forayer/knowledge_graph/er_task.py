@@ -46,6 +46,12 @@ class ERTask:
     def __getitem__(self, key):
         return self.kgs[key]
 
+    def sample(self, n: int):
+        sample_clusters = self.clusters.sample(n)
+        entity_ids = list(sample_clusters.elements.keys())
+        sampled_kgs = [k.subgraph(entity_ids) for k_name, k in self.kgs.items()]
+        return ERTask(kgs=sampled_kgs, clusters=sample_clusters)
+
     def inverse_attr_dict(self) -> Dict[Any, Dict[str, str]]:
         """Create an attributes dictionary with unique attribute values as key.
 

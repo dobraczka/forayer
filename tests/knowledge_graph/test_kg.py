@@ -19,10 +19,49 @@ def test_basic():
     assert kg["e1"] == kg.entities["e1"]
     assert kg[["e1", "e2", "e3"]] == entities
 
-    assert kg.take(3) == kg.entities
-
     kg2 = KG(entities=entities, rel=rel, name="kg1")
     assert kg == kg2
+
+
+def test_subgraph():
+    entities = {
+        "e1": {"a1": "first entity", "a2": 123},
+        "e2": {"a1": "second ent"},
+        "e3": {"a2": 124},
+        "e4": {"a1": 24},
+    }
+    rel = {"e1": {"e3": "somerelation"}, "e4": {"e3": "somerelation", "e1": "test"}}
+    kg = KG(entities=entities, rel=rel)
+    sub = kg.subgraph(wanted=["e3", "e4"])
+    assert sub.entities == {"e3": {"a2": 124}, "e4": {"a1": 24}}
+    assert sub.rel == {"e4": {"e3": "somerelation"}}
+
+
+def test_sample():
+    entities = {
+        "e1": {"a1": "first entity", "a2": 123},
+        "e2": {"a1": "second ent"},
+        "e3": {"a2": 124},
+        "e4": {"a1": 24},
+    }
+    rel = {
+        "e1": {"e2": "somerelation", "e3": "somerelation"},
+        "e4": {"e3": "somerelation", "e1": "test"},
+    }
+    kg = KG(entities=entities, rel=rel)
+    one = kg.sample(1)
+    assert len(one) == 1
+    assert one.rel == {}
+
+    two = kg.sample(2)
+    assert len(two) == 2
+    if set(entities.keys()) == {"e1", "e2"}:
+        print("hello")
+        assert two.entities == {
+            "e1": {"a1": "first entity", "a2": 123},
+            "e2": {"a1": "second ent"},
+        }
+        assert two.rel == {"e1": {"e2": "somerelation"}}
 
 
 def test_neighbors():
@@ -68,6 +107,20 @@ def test_search():
     assert kg.search("124", attr="a2") == {e3[0]: e3[1]}
     assert kg.search("124") == {e3[0]: e3[1]}
     assert kg.search(124) == {e3[0]: e3[1]}
+
+
+def test_with_attr():
+    entities = {
+        "e1": {"a1": "first entity", "a2": 123},
+        "e2": {"a1": "second ent"},
+        "e3": {"a2": 124},
+    }
+    kg = KG(entities)
+    assert kg.with_attr("a1") == {
+        "e1": {"a1": "first entity", "a2": 123},
+        "e2": {"a1": "second ent"},
+    }
+    assert kg.with_attr("a3") == {}
 
 
 def test_attribute_embedded(tmpdir):

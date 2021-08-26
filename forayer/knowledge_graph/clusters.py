@@ -1,3 +1,4 @@
+import itertools
 from typing import Dict, List, Set, Tuple, Union
 
 
@@ -46,6 +47,30 @@ class ClusterHelper:
     Only str are allowed for entity identifiers
     """
 
+    def _check_entity_id_type(self, e_id):
+        """Check if entity id is str.
+
+        Parameters
+        ----------
+        e_id
+           entity id to check
+
+        Returns
+        -------
+        e_id
+            If e_id is str
+
+        Raises
+        ------
+        TypeError
+            If e_id is not str
+        """
+        if not isinstance(e_id, str):
+            raise TypeError(
+                f"Only str is allowed as element identifier, but got {type(e_id)}"
+            )
+        return e_id
+
     def _from_set_list(self, data: List[Set[Union[str, int]]]):
         for cluster_id, inner in enumerate(data):
             if not isinstance(inner, set):
@@ -54,11 +79,7 @@ class ClusterHelper:
                 )
             inner_set = set()
             for inner_element in inner:
-                if not isinstance(inner_element, str):
-                    raise TypeError(
-                        "Only str is allowed as element identifier, but got"
-                        f" {type(inner_element)}"
-                    )
+                self._check_entity_id_type(inner_element)
                 inner_element = inner_element
                 self.elements[inner_element] = cluster_id
                 inner_set.add(inner_element)
@@ -67,10 +88,7 @@ class ClusterHelper:
     def _from_dict(self, data: Dict[str, str]):
         for cluster_id, dict_items in enumerate(data.items()):
             left, right = dict_items
-            if not isinstance(left, str):
-                raise TypeError(
-                    f"Only str is allowed as element identifier, but got {type(left)}"
-                )
+            self._check_entity_id_type(left)
             if not isinstance(right, str):
                 raise TypeError(
                     f"Only str is allowed as dict value, but got {type(left)}"
@@ -80,12 +98,17 @@ class ClusterHelper:
             self.elements[right] = cluster_id
             self.clusters[cluster_id].add(right)
 
+    def _from_clusters(self, data: Dict[int, Set[str]]):
+        self.elements = {
+            self._check_entity_id_type(e_id): int(cluster_id)
+            for cluster_id, cluster in data.items()
+            for e_id in cluster
+        }
+        self.clusters = data
+
     def __init__(
         self,
-        data: Union[
-            List[Set[str]],
-            Dict[str, str],
-        ] = None,
+        data: Union[List[Set[str]], Dict[str, str], Dict[int, Set[str]]] = None,
     ):
         """Initialize a ClusterHelper object with clusters.
 
@@ -94,6 +117,7 @@ class ClusterHelper:
         data : Union[
                     List[Set[str]],
                     Dict[str, str],
+                    Dict[int,Set[str]],
                 ]
             Clusters either as list of sets, or dict with
             links as key, value pairs
@@ -111,9 +135,15 @@ class ClusterHelper:
         elif isinstance(data, list):
             self._from_set_list(data)
         elif isinstance(data, dict):
-            self._from_dict(data)
+            if isinstance(list(data.values())[0], set):
+                self._from_clusters(data)
+            else:
+                self._from_dict(data)
 
     def __repr__(self):
+        return f"ClusterHelper(elements={str(self.elements)},clusters={str(self.clusters)})"
+
+    def __str__(self):
         return str(self.clusters)
 
     def info(self):
@@ -184,6 +214,26 @@ class ClusterHelper:
     def __setitem__(self, key, value):
         raise TypeError(
             "'ClusterHelper' does not support item assignment use .add() or .remove()"
+        )
+
+    def sample(self, n: int):
+        """Sample n clusters.
+
+        Parameters
+        ----------
+        n : int
+            Number of clusters to return.
+
+        Returns
+        -------
+        ClusterHelper
+           ClusterHelper with n clusters.
+        """
+        return ClusterHelper(
+            {
+                c_id: cluster
+                for c_id, cluster in itertools.islice(self.clusters.items(), n)
+            }
         )
 
     def add(
@@ -279,5 +329,5 @@ class ClusterHelper:
             )
         return False
 
-    def __size__(self):
+    def __len__(self):
         return len(self.clusters)

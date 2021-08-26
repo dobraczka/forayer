@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import itertools
 import warnings
+from collections import defaultdict
 from pprint import pprint
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, Iterable, List, Set, Union
 
 from forayer.transformation.word_embedding import AttributeVectorizer
 from rdflib import Graph, Literal, URIRef
@@ -46,11 +47,12 @@ class KG:
         self.entities = entities
         self.rel = rel
         inv_rel = {}
-        for left_ent, right_ent_rel in rel.items():
-            for right_ent, _ in right_ent_rel.items():
-                if right_ent not in inv_rel:
-                    inv_rel[right_ent] = set()
-                inv_rel[right_ent].add(left_ent)
+        if rel is not None:
+            for left_ent, right_ent_rel in rel.items():
+                for right_ent, _ in right_ent_rel.items():
+                    if right_ent not in inv_rel:
+                        inv_rel[right_ent] = set()
+                    inv_rel[right_ent].add(left_ent)
         self._inv_rel = inv_rel
         self.name = name
 
@@ -74,6 +76,11 @@ class KG:
             only look in specific attribute(s)
         exact : bool
             if True only consider exact matches
+
+        Returns
+        -------
+        result: Dict[str, Dict[str, Any]]
+            Entites that have attribute values that match the query.
 
         Examples
         --------
@@ -109,21 +116,18 @@ class KG:
                         result[ent_id] = attr_dict
         return result
 
-    def take(self, n: int) -> Dict[Any, Dict[Any, Any]]:
-        """Return n entities.
-
-        Iterates over entity dictionary and returns dictionary
-        with the first n entities that come up during iteration.
+    def with_attr(self, attr: str):
+        """Search for entities with specific attribute.
 
         Parameters
         ----------
-        n : int
-            number of entities to return
+        attr: str
+            Attribute name.
 
         Returns
         -------
-        Dict[Any, Dict[Any, Any]]
-            n entities from knowledge graph
+        result: Dict[str, Dict[str, Any]]
+            Entites that have the attribute.
 
         Examples
         --------
@@ -134,13 +138,69 @@ class KG:
                 "e3": {"a2": 124},
             }
         >>> kg = KG(entities)
-        >>> kg.take(2)
-        {'e1': {'a1': 'first entity', 'a2': 123}, 'e2': {'a1': 'second ent'}}
+        >>> kg.with_attr("a1")
+        {'e1': {'a1': 'first entity', 'a2': 123}, "e2": {"a1": "second ent"}}
         """
         return {
             ent_id: attr_dict
-            for ent_id, attr_dict in itertools.islice(self.entities.items(), n)
+            for ent_id, attr_dict in self.entities.items()
+            if attr in attr_dict
         }
+
+    def subgraph(self, wanted: Iterable[str]):
+        """Return a subgraph with only wanted entities.
+
+        Parameters
+        ----------
+        wanted: Iterable[str]
+            Ids of wanted entities.
+
+        Returns
+        -------
+        KG
+            subgraph with only wanted entities
+        """
+        sample_entities = {
+            ent_id: attr_dict
+            for ent_id, attr_dict in self.entities.items()
+            if ent_id in wanted
+        }
+        sample_rel = defaultdict(dict)
+        for ent_id, right_rel_dict in self.rel.items():
+            if ent_id in sample_entities:
+                for right_ent_id, rel_dict in right_rel_dict.items():
+                    if right_ent_id in sample_entities:
+                        sample_rel[ent_id][right_ent_id] = rel_dict
+        return KG(entities=sample_entities, rel=sample_rel, name=self.name)
+
+    def sample(self, n: int) -> Dict[Any, Dict[Any, Any]]:
+        """Return a sample of the knowledge graph with n entities.
+
+        Parameters
+        ----------
+        n : int
+            number of entities to return
+
+        Returns
+        -------
+        KG
+            knowledge graph with n entities
+
+        Examples
+        --------
+        >>> from forayer.knowledge_graph import KG
+        >>> entities = {
+                "e1": {"a1": "first entity", "a2": 123},
+                "e2": {"a1": "second ent"},
+                "e3": {"a2": 124},
+            }
+        >>> kg = KG(entities)
+        >>> kg.sample(2)
+        KG(entities={'e1': {'a1': 'first entity', 'a2': 123},
+            'e2': {'a1': 'second ent'}},rel=None,name=None)
+        """
+        sampled_e_ids = list(itertools.islice(self.entities.keys(), n))
+        return self.subgraph(sampled_e_ids)
 
     def __getitem__(self, key: Union[str, List[str]]) -> Dict[Any, Any]:
         """Return entity/entities with key(s).
@@ -292,6 +352,9 @@ class KG:
                 object = URIRef(prefix + right_id)
                 rdf_g.add((subject, predicate, object))
         return rdf_g
+
+    def __len__(self):
+        return len(self.entities)
 
 
 class AttributeEmbeddedKG(KG):

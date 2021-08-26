@@ -6,6 +6,12 @@ def test_clusters_init():
     clusters_1 = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
 
     assert clusters_1.clusters == {0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
+    clusters_2 = ClusterHelper({"a1": "1", "a2": "2", "a3": "3"})
+    clusters_3 = ClusterHelper({0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}})
+    assert clusters_1 == clusters_2
+    assert clusters_1 == clusters_3
+
+    assert clusters_1.clusters == {0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
 
     # multiple
     list_set = [{"a1", "b1", "b5"}, {"a2", "b2"}, {"a3", "b3"}]
@@ -65,3 +71,13 @@ def test_cluster_removal():
     assert "a1" not in ch
     assert "b1" not in ch
     assert "b5" not in ch
+
+
+def test_sample():
+    clusters = {0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
+    ch = ClusterHelper(clusters)
+    samp = ch.sample(1)
+    c_id = list(samp.clusters.keys())[0]
+    assert len(samp) == 1
+    assert c_id in clusters
+    assert samp[c_id] == clusters[c_id]
