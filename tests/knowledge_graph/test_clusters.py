@@ -26,6 +26,7 @@ def test_cluster_links():
     clusters = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
     assert clusters.links("a1") == "1"
     assert clusters.links("1") == "a1"
+    assert clusters.links("a1", always_return_set=True) == {"1"}
     with pytest.raises(KeyError):
         print(clusters.links("wrong"))
 
@@ -44,6 +45,19 @@ def test_cluster_element_add():
     clusters_2.add({"a1", "1", "d"})
 
     assert clusters_1.links("a1") == clusters_2.links("a1")
+
+
+def test_get():
+    clusters = ClusterHelper({0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}})
+    assert clusters.get(0) == {"a1", "1"}
+    assert clusters.get(0, value={}) == {"a1", "1"}
+    assert clusters.get("a1") == 0
+    assert clusters.get("a1", value=-1) == 0
+
+    assert clusters.get(3) == None
+    assert clusters.get(3, value={}) == {}
+    assert clusters.get("test") == None
+    assert clusters.get("test", value=-1) == -1
 
 
 def test_cluster_element_remove():

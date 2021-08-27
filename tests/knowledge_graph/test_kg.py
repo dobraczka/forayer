@@ -8,13 +8,29 @@ from rdflib import Literal, URIRef
 from rdflib.namespace import FOAF
 
 
-def test_basic():
+@pytest.fixture
+def simple_kg_entites_rel_123():
     entities = {
         "e1": {"a1": "first entity", "a2": 123},
         "e2": {"a1": "second ent"},
         "e3": {"a2": 124},
     }
     rel = {"e1": {"e3": "somerelation"}}
+    return entities, rel
+
+
+@pytest.fixture
+def kg_first_second_third():
+    entities = {
+        "e1": {"a1": "first entity", "a2": "test"},
+        "e2": {"a1": "second"},
+        "e3": {"a2": "third"},
+    }
+    return entities, {"e1": {"e3": "somerelation"}}
+
+
+def test_basic(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
     kg = KG(entities=entities, rel=rel, name="kg1")
     assert kg["e1"] == kg.entities["e1"]
     assert kg[["e1", "e2", "e3"]] == entities
@@ -36,6 +52,14 @@ def test_subgraph():
     assert sub.entities == {"e3": {"a2": 124}, "e4": {"a1": 24}}
     assert sub.rel == {"e4": {"e3": "somerelation"}}
 
+    # test entities that only show up in rel
+    entities2 = {"e1": {"a": 1}, "e2": {"a": 3}}
+    rel2 = {"e1": {"e2": "rel", "e3": "rel"}}
+    kg2 = KG(entities=entities2, rel=rel2, name="kg")
+    assert kg2.subgraph(["e1", "e3"]) == KG(
+        entities={"e1": {"a": 1}, "e3": {}}, rel={"e1": {"e3": "rel"}}, name="kg"
+    )
+
 
 def test_sample():
     entities = {
@@ -55,8 +79,7 @@ def test_sample():
 
     two = kg.sample(2)
     assert len(two) == 2
-    if set(entities.keys()) == {"e1", "e2"}:
-        print("hello")
+    if set(two.entities.keys()) == {"e1", "e2"}:
         assert two.entities == {
             "e1": {"a1": "first entity", "a2": 123},
             "e2": {"a1": "second ent"},
@@ -64,13 +87,9 @@ def test_sample():
         assert two.rel == {"e1": {"e2": "somerelation"}}
 
 
-def test_neighbors():
-    entities = {
-        "e1": {"a1": "first entity", "a2": 123},
-        "e2": {"a1": "second ent"},
-        "e3": {"a2": 124},
-    }
-    kg = KG(entities, {"e1": {"e3": "somerelation"}})
+def test_neighbors(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg = KG(entities, rel)
 
     assert kg.neighbors("e1", only_id=True) == {"e3"}
     assert kg.neighbors("e3", only_id=True) == {"e1"}
@@ -83,12 +102,13 @@ def test_neighbors():
     assert kg_dual_rel.neighbors("e3", only_id=True) == {"e1"}
 
 
-def test_search():
-    e1 = ("e1", {"a1": "first entity", "a2": 123})
-    e2 = ("e2", {"a1": "second ent"})
-    e3 = ("e3", {"a2": 124})
+def test_search(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    e1 = ("e1", entities["e1"])
+    e2 = ("e2", entities["e2"])
+    e3 = ("e3", entities["e3"])
     entities = {e_id: val for e_id, val in [e1, e2, e3]}
-    kg = KG(entities, {"e1": {"e3": "somerelation"}})
+    kg = KG(entities, rel)
 
     assert kg.search("first entity") == {e1[0]: e1[1]}
     assert kg.search("first entity", attr=None) == {e1[0]: e1[1]}
@@ -109,12 +129,8 @@ def test_search():
     assert kg.search(124) == {e3[0]: e3[1]}
 
 
-def test_with_attr():
-    entities = {
-        "e1": {"a1": "first entity", "a2": 123},
-        "e2": {"a1": "second ent"},
-        "e3": {"a2": 124},
-    }
+def test_with_attr(simple_kg_entites_rel_123):
+    entities, _ = simple_kg_entites_rel_123
     kg = KG(entities)
     assert kg.with_attr("a1") == {
         "e1": {"a1": "first entity", "a2": 123},
@@ -123,13 +139,9 @@ def test_with_attr():
     assert kg.with_attr("a3") == {}
 
 
-def test_attribute_embedded(tmpdir):
-    entities = {
-        "e1": {"a1": "first entity", "a2": "test"},
-        "e2": {"a1": "second"},
-        "e3": {"a2": "third"},
-    }
-    kg = KG(entities, {"e1": {"e3": "somerelation"}}, "testkg")
+def test_attribute_embedded(tmpdir, kg_first_second_third):
+    entities, rel = kg_first_second_third
+    kg = KG(entities, rel, "testkg")
 
     # use toy embeddings to speed up test and lower traffic
     forayer.transformation.word_embedding._EMBEDDING_INFO["glove"] = (
@@ -179,13 +191,9 @@ EXPECTED_WARNING = (
 )
 
 
-def test_attribute_embedded_with_missing_embeddings(tmpdir):
-    entities = {
-        "e1": {"a1": "first entity", "a2": "test"},
-        "e2": {"a1": "second"},
-        "e3": {"a2": "third"},
-    }
-    kg = KG(entities, {"e1": {"e3": "somerelation"}}, "testkg")
+def test_attribute_embedded_with_missing_embeddings(tmpdir, kg_first_second_third):
+    entities, rel = kg_first_second_third
+    kg = KG(entities, rel, "testkg")
 
     # use toy embeddings to speed up test and lower traffic
     forayer.transformation.word_embedding._EMBEDDING_INFO["glove"] = (
@@ -294,3 +302,38 @@ def test_to_rdflib():
     )
 
     assert set(rdf_g) == set(EXPECTED_TRIPLES_PREFIXED)
+
+
+def test_add_kgs(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    entities2 = {"e4": {"a2": "another"}}
+    rel2 = {"e4": {"e1": "hello"}}
+    kg1 = KG(entities=entities, rel=rel)
+    kg2 = KG(entities=entities2, rel=rel2)
+
+    e_expected = {
+        "e1": entities["e1"],
+        "e2": entities["e2"],
+        "e3": entities["e3"],
+        "e4": {"a2": "another"},
+    }
+    r_expected = {"e1": {"e3": "somerelation"}, "e4": {"e1": "hello"}}
+    expected = KG(entities=e_expected, rel=r_expected)
+    assert kg1 + kg2 == expected
+
+
+def test_add_entity(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg1 = KG(entities=entities, rel=rel)
+    with pytest.raises(ValueError):
+        kg1.add_entity("e3", {"a2": 124})
+    kg1.add_entity("e4", {"a1": "test"})
+    assert kg1["e4"] == {"a1": "test"}
+
+
+def test_remove_entity(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg1 = KG(entities=entities, rel=rel)
+    assert not kg1.remove_entity("e6")
+    assert kg1.remove_entity("e3")
+    assert not "e3" in kg1

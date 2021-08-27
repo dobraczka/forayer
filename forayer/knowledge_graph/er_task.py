@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from functools import reduce
+from itertools import chain
 from typing import TYPE_CHECKING, Any, Dict, List
+
+from forayer.utils.dict_help import dict_merge
 
 # avoid circular imports see: https://www.stefaanlippens.net/circular-imports-type-hints-python.html
 if TYPE_CHECKING:
@@ -46,11 +50,44 @@ class ERTask:
     def __getitem__(self, key):
         return self.kgs[key]
 
-    def sample(self, n: int):
+    def sample(self, n: int, unmatched: int = None):
         sample_clusters = self.clusters.sample(n)
+        print("len(sample_clusters)=%s" % (len(sample_clusters)))
         entity_ids = list(sample_clusters.elements.keys())
+        print("len(entity_ids)=%s" % (len(entity_ids)))
+        if unmatched is not None:
+            unm_ent = set()
+            for cand in self.clusters.elements.keys():
+                if len(unm_ent) == unmatched:
+                    break
+                if cand not in self.clusters:
+                    unmatched.add(cand)
+                elif cand not in entity_ids:
+                    cand_links = self.clusters.links(cand, always_return_set=True)
+                    if not any(c in entity_ids or c in unm_ent for c in cand_links):
+                        unm_ent.add(cand)
+            entity_ids.extend(list(unm_ent))
+        print("len(entity_ids)=%s" % (len(entity_ids)))
+        for _, k in self.kgs.items():
+            print(f"total: {len(k)}")
         sampled_kgs = [k.subgraph(entity_ids) for k_name, k in self.kgs.items()]
+        for k in sampled_kgs:
+            print(len(k))
         return ERTask(kgs=sampled_kgs, clusters=sample_clusters)
+
+    def all_entities(self) -> Dict[str, Dict]:
+        """Return the entities of all KGs in a single dict"""
+        return reduce(dict_merge, [k.entities for k in self.kgs.values()])
+
+    def without_match(self):
+        return [
+            e
+            for e in chain(*[list(k.entities.keys()) for k in self.kgs.values()])
+            if e not in self.clusters
+        ]
+
+    def __len__(self):
+        return sum([len(k) for k in self.kgs.values()])
 
     def inverse_attr_dict(self) -> Dict[Any, Dict[str, str]]:
         """Create an attributes dictionary with unique attribute values as key.

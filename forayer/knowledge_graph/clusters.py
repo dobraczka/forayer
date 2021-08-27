@@ -161,7 +161,7 @@ class ClusterHelper:
             + f"(# elements:{num_elements}, # clusters:{num_clusters})"
         )
 
-    def links(self, key: str) -> Union[str, Set[str]]:
+    def links(self, key: str, always_return_set=False) -> Union[str, Set[str]]:
         """Get entities linked to this entity.
 
         Parameters
@@ -169,15 +169,18 @@ class ClusterHelper:
         key : str
             entity id
 
+        always_return_set: str
+            If True, return set even if only one entity is contained
         Returns
         -------
         Union[str, Set[str]]
             Either the id of the single linked entity or a set of
             ids if there is more than one link
+            If always_return_set is True, will always return set
         """
         cluster = self.clusters[self.elements[key]]
         other_members = cluster.difference({key})
-        if len(other_members) == 1:
+        if not always_return_set and len(other_members) == 1:
             return next(iter(other_members))
         return other_members
 
@@ -203,6 +206,30 @@ class ClusterHelper:
             return self.elements[key]
         elif isinstance(key, int):
             return self.clusters[key]
+
+    def get(self, key: Union[str, int], value=None):
+        """Return entitiy's cluster id or cluster's element or default value.
+
+        If key is str, tries to return the cluster id of the entity.
+        If key is int, tries to return the cluster with the cluster id == key.
+        If None is found return provided value.
+
+        Parameters
+        ----------
+        key : Union[str,int]
+            Searched key.
+        value
+            Default value to return in case key is not present.
+
+        Returns
+        -------
+        Union[int, Set[str]]
+            Entity's cluster id or cluster with provided cluster_id.
+        """
+        try:
+            return self[key]
+        except KeyError:
+            return value
 
     def __contains__(self, key):
         if isinstance(key, str):

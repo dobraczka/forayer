@@ -8,6 +8,7 @@ from pprint import pprint
 from typing import Any, Dict, Iterable, List, Set, Union
 
 from forayer.transformation.word_embedding import AttributeVectorizer
+from forayer.utils.dict_help import dict_merge, nested_ddict2dict
 from rdflib import Graph, Literal, URIRef
 from tqdm import tqdm
 
@@ -150,6 +151,11 @@ class KG:
     def subgraph(self, wanted: Iterable[str]):
         """Return a subgraph with only wanted entities.
 
+        Creates a subgraph with the wanted entities. Contains only relationships
+        between wanted entities. Entities without attributes (possibly not contained
+        in self.entities) and relationships that point outside the subgraph are added
+        as entities without attributes to the result KG's entities.
+
         Parameters
         ----------
         wanted: Iterable[str]
@@ -159,6 +165,15 @@ class KG:
         -------
         KG
             subgraph with only wanted entities
+
+        Examples
+        --------
+        >>> from forayer.knowledge_graph import KG
+        >>> entities = {"e1": {"a": 1}, {"e2": {"a": 3}}
+        >>> rel = {"e1": {"e2": "rel", "e3": "rel"}}
+        >>> kg = KG(entities,rel)
+        >>> kg.subgraph(["e1","e3"])
+        KG(entities={'e1': {'a': 1}, 'e3': {}}, rel={'e1': {'e3': 'rel'}}, name=None)
         """
         sample_entities = {
             ent_id: attr_dict
@@ -166,25 +181,80 @@ class KG:
             if ent_id in wanted
         }
         sample_rel = defaultdict(dict)
+        entities_in_rel = set()
         for ent_id, right_rel_dict in self.rel.items():
-            if ent_id in sample_entities:
+            if ent_id in wanted:
                 for right_ent_id, rel_dict in right_rel_dict.items():
-                    if right_ent_id in sample_entities:
+                    if right_ent_id in wanted:
+                        entities_in_rel.add(ent_id)
+                        entities_in_rel.add(right_ent_id)
                         sample_rel[ent_id][right_ent_id] = rel_dict
-        return KG(entities=sample_entities, rel=sample_rel, name=self.name)
+        # add entities without attributes, that only show up in relationships
+        # that point outside the subgraph and therefore were missed
+        for w in wanted:
+            if (w not in sample_entities and w not in sample_rel) and (
+                w in self.entities or w in self.rel or w in self._inv_rel
+            ):
+                sample_entities[w] = {}
+        return KG(
+            entities=sample_entities, rel=nested_ddict2dict(sample_rel), name=self.name
+        )
 
-    def sample(self, n: int) -> Dict[Any, Dict[Any, Any]]:
+    def add_entity(self, e_id: str, e_attr: Dict):
+        """Add an entity to the knowledge graph.
+
+        Parameters
+        ----------
+        e_id : str
+            Id of the entity you want to add.
+        e_attr : Dict
+            Attributes of the entity you want to add.
+
+        Raises
+        ------
+        ValueError
+            If entity id is already present.
+        """
+        if e_id in self.entities:
+            raise ValueError(f"{e_id} already exists: {self.entities[e_id]}")
+        self.entities[e_id] = e_attr
+
+    def remove_entity(self, e_id: str) -> bool:
+        """Remove the entity with the id.
+
+        Parameters
+        ----------
+        e_id : str
+            Id of entity you want to remove.
+
+        Returns
+        -------
+        bool
+            True if entity was contained and therefore successfully removed, False else.
+        """
+        if e_id in self.entities:
+            del self.entities[e_id]
+            if e_id in self.rel:
+                del self.rel[e_id]
+            if e_id in self._inv_rel:
+                for other_id in self._inv_rel[e_id]:
+                    del self.rel[other_id][e_id]
+                del self._inv_rel[e_id]
+            return True
+        return False
+
+    def sample(self, n: int) -> KG:
         """Return a sample of the knowledge graph with n entities.
 
         Parameters
         ----------
         n : int
-            number of entities to return
+            Number of entities to return.
 
         Returns
         -------
         KG
-            knowledge graph with n entities
+            Knowledge graph with n entities.
 
         Examples
         --------
@@ -222,6 +292,13 @@ class KG:
         if isinstance(key, list):
             return {e_id: self.entities[e_id] for e_id in key}
         return self.entities[key]
+
+    def __contains__(self, key):
+        # some datasets have entities without attributes that
+        # only show up in the relations
+        if key in self.entities or key in self.rel or key in self._inv_rel:
+            return True
+        return False
 
     def __setitem__(self, key, value):
         """Not implemented."""
@@ -280,9 +357,9 @@ class KG:
         num_ent_rel = len(set(self.rel.keys()).union(set(self._inv_rel.keys())))
         name = "KG" if self.name is None else self.name
         return (
-            f"{name}: (# entities_with_rel: {num_ent_rel}, # rel: {len(self.rel)}, #"
-            f" entities_with_attributes: {num_ent}, # attributes: {num_attr_name}, #"
-            f" attr_values: {num_attr_values})"
+            f"{name}: (# entities: {len(self)}, # entities_with_rel: {num_ent_rel}, #"
+            f" rel: {len(self.rel)}, # entities_with_attributes: {num_ent}, #"
+            f" attributes: {num_attr_name}, # attr_values: {num_attr_values})"
         )
 
     def to_rdflib(self, prefix: str = "", attr_mapping: dict = None):
@@ -353,8 +430,19 @@ class KG:
                 rdf_g.add((subject, predicate, object))
         return rdf_g
 
+    def __add__(self, other):
+        merged_entities = dict_merge(self.entities, other.entities)
+        merged_rel = dict_merge(self.rel, other.rel)
+        return KG(entities=merged_entities, rel=merged_rel)
+
     def __len__(self):
-        return len(self.entities)
+        # some datasets have entities without attributes that
+        # only show up in the relations
+        return len(
+            set(self.entities)
+            .union(set(self.rel.keys()))
+            .union(set(self._inv_rel.keys()))
+        )
 
 
 class AttributeEmbeddedKG(KG):
