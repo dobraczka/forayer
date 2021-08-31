@@ -4,7 +4,7 @@ import os
 from collections import namedtuple
 
 from forayer.datasets.base_dataset import RemoteDataset
-from forayer.io.from_to_rdf import load_from_triples
+from forayer.io.from_to_rdf import load_from_rdf
 from forayer.knowledge_graph import ClusterHelper, ERTask
 from rdflib import Graph
 from tqdm import tqdm
@@ -151,12 +151,12 @@ class OAEIKGDataset(RemoteDataset):
         dl_task = self.__class__._TASKS[self.task]
         left_name = dl_task.kg1.file_name.replace(".xml", "")
         right_name = dl_task.kg2.file_name.replace(".xml", "")
-        kg_left = load_from_triples(
+        kg_left = load_from_rdf(
             os.path.join(self.data_folder, dl_task.kg1.file_name),
             format="xml",
             kg_name=left_name,
         )
-        kg_right = load_from_triples(
+        kg_right = load_from_rdf(
             os.path.join(self.data_folder, dl_task.kg2.file_name),
             format="xml",
             kg_name=right_name,
