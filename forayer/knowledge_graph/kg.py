@@ -380,6 +380,15 @@ class KG:
             Relation names as set.
         """
         rel_names = set()
+        for _, target_rel_dict in self.rel.items():
+            for _, rel_dict in target_rel_dict.items():
+                if isinstance(rel_dict, str):
+                    rel_names.add(rel_dict)
+                elif isinstance(rel_dict, dict):
+                    probably_name = list(rel_dict.keys())
+                    if len(probably_name) == 1:
+                        rel_names.add(probably_name[0])
+        return rel_names
 
     def info(self) -> str:
         """Print general information about this object.
