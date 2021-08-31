@@ -304,6 +304,15 @@ def test_to_rdflib():
     assert set(rdf_g) == set(EXPECTED_TRIPLES_PREFIXED)
 
 
+def test_entity_ids(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    KG(entities, rel).entity_ids == {
+        "e1",
+        "e2",
+        "e3",
+    }
+
+
 def test_add_kgs(simple_kg_entites_rel_123):
     entities, rel = simple_kg_entites_rel_123
     entities2 = {"e4": {"a2": "another"}}
@@ -336,4 +345,16 @@ def test_remove_entity(simple_kg_entites_rel_123):
     kg1 = KG(entities=entities, rel=rel)
     assert not kg1.remove_entity("e6")
     assert kg1.remove_entity("e3")
-    assert not "e3" in kg1
+    assert "e3" not in kg1
+
+
+def test_attribute_names(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg = KG(entities=entities, rel=rel)
+    assert {"a1", "a2"} == kg.attribute_names
+
+
+def test_relation_names(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg = KG(entities=entities, rel=rel)
+    assert {"somerelation"} == kg.relation_names

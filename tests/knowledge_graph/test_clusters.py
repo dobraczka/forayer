@@ -54,9 +54,9 @@ def test_get():
     assert clusters.get("a1") == 0
     assert clusters.get("a1", value=-1) == 0
 
-    assert clusters.get(3) == None
+    assert clusters.get(3) is None
     assert clusters.get(3, value={}) == {}
-    assert clusters.get("test") == None
+    assert clusters.get("test") is None
     assert clusters.get("test", value=-1) == -1
 
 

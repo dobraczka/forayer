@@ -75,6 +75,11 @@ def test_sample_openea():
     assert len(sampled["Wikidata"]) >= 500
     assert len(sampled) >= (500 * 2) + 1000
 
+    # test seeded
+    assert ds.er_task.sample(500, seed=13, unmatched=1000) == ds.er_task.sample(
+        500, seed=13, unmatched=1000
+    )
+
 
 def test_all_entities(er_task):
     expected = {
@@ -86,6 +91,17 @@ def test_all_entities(er_task):
         "kg_2_e3": {"a7": 123},
     }
     assert er_task.all_entities() == expected
+
+
+def test_entity_ids(er_task):
+    assert er_task.entity_ids == {
+        "kg_1_e1",
+        "kg_1_e2",
+        "kg_1_e3",
+        "kg_2_e1",
+        "kg_2_e2",
+        "kg_2_e3",
+    }
 
 
 def test_without_match(er_task):

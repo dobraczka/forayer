@@ -1,14 +1,15 @@
 """module containing knowledge graph class."""
 from __future__ import annotations
 
-import itertools
+import random
 import warnings
 from collections import defaultdict
-from pprint import pprint
+from itertools import chain
 from typing import Any, Dict, Iterable, List, Set, Union
 
 from forayer.transformation.word_embedding import AttributeVectorizer
 from forayer.utils.dict_help import dict_merge, nested_ddict2dict
+from forayer.utils.random_help import random_generator
 from rdflib import Graph, Literal, URIRef
 from tqdm import tqdm
 
@@ -175,12 +176,12 @@ class KG:
         >>> kg.subgraph(["e1","e3"])
         KG(entities={'e1': {'a': 1}, 'e3': {}}, rel={'e1': {'e3': 'rel'}}, name=None)
         """
-        sample_entities = {
+        wanted_entities = {
             ent_id: attr_dict
             for ent_id, attr_dict in self.entities.items()
             if ent_id in wanted
         }
-        sample_rel = defaultdict(dict)
+        wanted_rel = defaultdict(dict)
         entities_in_rel = set()
         for ent_id, right_rel_dict in self.rel.items():
             if ent_id in wanted:
@@ -188,16 +189,16 @@ class KG:
                     if right_ent_id in wanted:
                         entities_in_rel.add(ent_id)
                         entities_in_rel.add(right_ent_id)
-                        sample_rel[ent_id][right_ent_id] = rel_dict
+                        wanted_rel[ent_id][right_ent_id] = rel_dict
         # add entities without attributes, that only show up in relationships
         # that point outside the subgraph and therefore were missed
         for w in wanted:
-            if (w not in sample_entities and w not in sample_rel) and (
+            if (w not in wanted_entities and w not in wanted_rel) and (
                 w in self.entities or w in self.rel or w in self._inv_rel
             ):
-                sample_entities[w] = {}
+                wanted_entities[w] = {}
         return KG(
-            entities=sample_entities, rel=nested_ddict2dict(sample_rel), name=self.name
+            entities=wanted_entities, rel=nested_ddict2dict(wanted_rel), name=self.name
         )
 
     def add_entity(self, e_id: str, e_attr: Dict):
@@ -243,13 +244,16 @@ class KG:
             return True
         return False
 
-    def sample(self, n: int) -> KG:
+    def sample(self, n: int, seed: Union[int, random.Random] = None) -> KG:
         """Return a sample of the knowledge graph with n entities.
 
         Parameters
         ----------
         n : int
             Number of entities to return.
+        seed : Union[int, random.Random]
+            Seed for randomness or seeded random.Random object.
+            Default is None.
 
         Returns
         -------
@@ -269,7 +273,8 @@ class KG:
         KG(entities={'e1': {'a1': 'first entity', 'a2': 123},
             'e2': {'a1': 'second ent'}},rel=None,name=None)
         """
-        sampled_e_ids = list(itertools.islice(self.entities.keys(), n))
+        r_gen = random_generator(seed)
+        sampled_e_ids = r_gen.sample(self.entities.keys(), n)
         return self.subgraph(sampled_e_ids)
 
     def __getitem__(self, key: Union[str, List[str]]) -> Dict[Any, Any]:
@@ -336,6 +341,45 @@ class KG:
         if only_id:
             return result_ids
         return self[list(result_ids)]
+
+    @property
+    def entity_ids(self) -> Set[str]:
+        """Return ids of all entities.
+
+        Returns
+        -------
+        Set[str]
+            Ids of all entities.
+        """
+        return (
+            set(self.entities.keys())
+            .union(set(self.rel.keys()))
+            .union(set(self._inv_rel.keys()))
+        )
+
+    @property
+    def attribute_names(self) -> Set[str]:
+        """Return all attribute names.
+
+        Returns
+        -------
+        Set[str]
+            Attribute names as set.
+        """
+        # get list of sets of attribute dict keys
+        # and flatten into one set using chain
+        return set(chain(*[set(k.keys()) for k in self.entities.values()]))
+
+    @property
+    def relation_names(self) -> Set[str]:
+        """Return all relation names.
+
+        Returns
+        -------
+        Set[str]
+            Relation names as set.
+        """
+        rel_names = set()
 
     def info(self) -> str:
         """Print general information about this object.

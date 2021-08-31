@@ -1,5 +1,7 @@
-import itertools
+import random
 from typing import Dict, List, Set, Tuple, Union
+
+from forayer.utils.random_help import random_generator
 
 
 class ClusterHelper:
@@ -243,24 +245,25 @@ class ClusterHelper:
             "'ClusterHelper' does not support item assignment use .add() or .remove()"
         )
 
-    def sample(self, n: int):
+    def sample(self, n: int, seed: Union[int, random.Random] = None):
         """Sample n clusters.
 
         Parameters
         ----------
         n : int
             Number of clusters to return.
+        seed : Union[int, random.Random]
+            Seed for randomness or seeded random.Random object.
+            Default is None.
 
         Returns
         -------
         ClusterHelper
            ClusterHelper with n clusters.
         """
+        r_gen = random_generator(seed)
         return ClusterHelper(
-            {
-                c_id: cluster
-                for c_id, cluster in itertools.islice(self.clusters.items(), n)
-            }
+            {c_id: cluster for c_id, cluster in r_gen.sample(self.clusters.items(), n)}
         )
 
     def add(
