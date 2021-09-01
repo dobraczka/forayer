@@ -62,7 +62,7 @@ class KG:
         if isinstance(other, KG):
             return (
                 self.entities == other.entities
-                and self.rel == self.rel
+                and self.rel == other.rel
                 and self.name == other.name
             )
         return False

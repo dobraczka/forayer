@@ -39,6 +39,20 @@ def test_basic(simple_kg_entites_rel_123):
     assert kg == kg2
 
 
+def test_eq(simple_kg_entites_rel_123, kg_first_second_third):
+    entities, rel = simple_kg_entites_rel_123
+    e2, r2 = kg_first_second_third
+    assert KG(entities, rel) == KG(entities, rel)
+    assert KG(entities, rel, name="test") != KG(entities, rel)
+    assert KG(entities, rel) != KG(e2, r2)
+    e_new = entities.copy()
+    e_new["e3"] = {}
+    assert KG(entities, rel) != KG(e_new, rel)
+    r_new = rel.copy()
+    r_new["e2"] = {"e1": "otherrel"}
+    assert KG(entities, rel) != KG(entities, r_new)
+
+
 def test_subgraph():
     entities = {
         "e1": {"a1": "first entity", "a2": 123},
