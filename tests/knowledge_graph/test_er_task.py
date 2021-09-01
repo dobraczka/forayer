@@ -105,6 +105,6 @@ def test_entity_ids(er_task):
 
 
 def test_without_match(er_task):
-    er_task.without_match() == []
+    assert er_task.without_match() == []
     er_task["kg1"].add_entity("test", {})
-    er_task.without_match() == ["test"]
+    assert er_task.without_match() == ["test"]

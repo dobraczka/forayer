@@ -320,7 +320,7 @@ def test_to_rdflib():
 
 def test_entity_ids(simple_kg_entites_rel_123):
     entities, rel = simple_kg_entites_rel_123
-    KG(entities, rel).entity_ids == {
+    assert KG(entities, rel).entity_ids == {
         "e1",
         "e2",
         "e3",
