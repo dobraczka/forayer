@@ -21,11 +21,46 @@ EdgeLine = namedtuple(
 )
 
 
-def _int_to_gradoop_id(value: int):
-    """Gradoop ids are 12 byte hexadecimal strings."""
+def int_to_gradoop_id(value: int) -> str:
+    """Casts to Gradoop id, which are 12 byte hexadecimal strings.
+
+    Parameters
+    ----------
+    value : int
+        Value to cast
+
+    Returns
+    -------
+    str
+        12 byte hexadecimal string (without leading '0x').
+    """
     # see https://stackoverflow.com/a/12638477
     # first two characters are leading 0x
     return f"{value:#0{26}x}"[2:]
+
+
+def is_gradoop_id(value) -> bool:
+    """Check if value is a valid Gradoop id.
+
+    Gradoop ids are 12 byte hexadecimal strings
+
+    Parameters
+    ----------
+    value
+        Value to check
+
+    Returns
+    -------
+    bool
+        True if is valid Gradoop id
+    """
+    if isinstance(value, str) and len(value) == 24:
+        try:
+            int(value, 16)
+            return True
+        except ValueError:
+            return False
+    return False
 
 
 def _load_metadata(path: str) -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
@@ -181,7 +216,10 @@ def _gather_edge_metadata(kgs: Dict[str, KG], attribute_type_mapping: Dict = Non
 
 
 def _gather_vertex_metadata(
-    kgs: Dict[str, KG], label_attr: str = "_label", attribute_type_mapping: Dict = None
+    kgs: Dict[str, KG],
+    label_attr: str = "_label",
+    attribute_type_mapping: Dict = None,
+    vertex_id_attr_name: str = None,
 ):
     v_metadata = nested_ddict()
     for kg in kgs.values():
@@ -213,6 +251,8 @@ def _gather_vertex_metadata(
                     )
                 else:
                     v_metadata[cur_label][attr_name] = type(attr_val)
+                if vertex_id_attr_name is not None:
+                    v_metadata[cur_label][vertex_id_attr_name] = str
     return nested_ddict2dict(v_metadata)
 
 
@@ -231,7 +271,10 @@ def _fix_metadata_order(metadata: Dict):
 
 
 def _create_metadata(
-    kgs: Dict[str, KG], label_attr: str = "_label", attribute_type_mapping: Dict = None
+    kgs: Dict[str, KG],
+    label_attr: str = "_label",
+    attribute_type_mapping: Dict = None,
+    vertex_id_attr_name: str = None,
 ):
     edge_type_mapping = None
     vertex_type_mapping = None
@@ -245,7 +288,10 @@ def _create_metadata(
     edge_metadata = _gather_edge_metadata(kgs, attribute_type_mapping=edge_type_mapping)
 
     vertex_metadata = _gather_vertex_metadata(
-        kgs, label_attr=label_attr, attribute_type_mapping=vertex_type_mapping
+        kgs,
+        label_attr=label_attr,
+        attribute_type_mapping=vertex_type_mapping,
+        vertex_id_attr_name=vertex_id_attr_name,
     )
 
     graph_metadata = {}
@@ -260,14 +306,20 @@ def _create_metadata(
     )
 
 
-def _create_vertex_lines(kgs: Dict[str, KG], label_attr: str, vertex_metadata: Dict):
+def _create_vertex_lines(
+    kgs: Dict[str, KG], label_attr: str, vertex_metadata: Dict, vertex_id_attr_name: str
+):
     v_dict = {}
+    vid_to_gid = {}
     for k_name, kg in kgs.items():
         for e_id, e_attr_dict in kg.entities.items():
             cur_label = e_attr_dict[label_attr]
             prop_line = []
             for attr_name, exp_type in zip(*vertex_metadata[cur_label]):
-                attr_value = e_attr_dict.get(attr_name, "")
+                if attr_name == vertex_id_attr_name:
+                    attr_value = e_id
+                else:
+                    attr_value = e_attr_dict.get(attr_name, "")
                 if attr_value != "":
                     if exp_type == bool:
                         attr_value = "true" if attr_value else "false"
@@ -284,11 +336,16 @@ def _create_vertex_lines(kgs: Dict[str, KG], label_attr: str, vertex_metadata: D
                 else:
                     v_dict[e_id].graph_ids.append(k_name)
             else:
-                v_dict[e_id] = VertexLine(e_id, [k_name], cur_label, prop_string)
-    return list(v_dict.values())
+                if not is_gradoop_id(e_id):
+                    grad_id = int_to_gradoop_id(len(v_dict))
+                    vid_to_gid[e_id] = grad_id
+                else:
+                    grad_id = e_id
+                v_dict[e_id] = VertexLine(grad_id, [k_name], cur_label, prop_string)
+    return list(v_dict.values()), vid_to_gid
 
 
-def _create_edge_lines(kgs: Dict[str, KG], edge_metadata: Dict):
+def _create_edge_lines(kgs: Dict[str, KG], edge_metadata: Dict, vid_to_gid: Dict):
     e_dict = {}
     for k_name, kg in kgs.items():
         for source_id, target_rel_dict in kg.rel.items():
@@ -315,18 +372,81 @@ def _create_edge_lines(kgs: Dict[str, KG], edge_metadata: Dict):
                 if tmp_id in e_dict:
                     e_dict[tmp_id].graph_ids.append(k_name)
                 else:
-                    edge_id = _int_to_gradoop_id(len(e_dict))
+                    edge_id = int_to_gradoop_id(len(e_dict))
+                    if vid_to_gid is not None:
+                        source_id = vid_to_gid.get(source_id, source_id)
+                        target_id = vid_to_gid.get(target_id, target_id)
                     e_dict[tmp_id] = EdgeLine(
                         edge_id, [k_name], source_id, target_id, cur_label, prop_string
                     )
     return list(e_dict.values())
 
 
+def _create_graph_lines(kgs: Dict[str, KG], graph_metadata: Dict, default_type="graph"):
+    g_lines = []
+    for g_id, kg in kgs.items():
+        if kg.name is None:
+            g_lines.append((g_id, default_type))
+        else:
+            g_lines.append((g_id, kg.name))
+    return g_lines
+
+
+def _create_metadata_lines(metadata):
+    m_lines = []
+    for ele_type, ele_dict in metadata.items():
+        for inner_type, prop_list in ele_dict.items():
+            props_list = []
+            for prop_name, type_class in zip(*prop_list):
+                if isinstance(type_class, str):
+                    props_list.append(f"{prop_name}:{type_class}")
+                else:
+                    props_list.append(f"{prop_name}:{type_class.__name__}")
+            props = ",".join(props_list)
+            m_lines.append((ele_type, inner_type, props))
+    return m_lines
+
+
+def _kgs_dict_to_gradoop_id(kgs: Dict) -> Dict:
+    return {
+        int_to_gradoop_id(i): kg_name_value[1]
+        for i, kg_name_value in enumerate(kgs.items())
+    }
+
+
+def _write_lines(lines, out_path):
+    with open(out_path, "w") as out_file:
+        for line in lines:
+            out_file.write(";".join(list(line)) + "\n")
+
+
 def write_to_csv_datasource(
-    kgs: Union[KG, Dict[str, KG]], out_path: str, attribute_type_mapping: Dict = None
+    kgs: Union[KG, Dict[str, KG]],
+    out_path: str,
+    label_attr: str = "_label",
+    attribute_type_mapping: Dict = None,
+    vertex_id_attr_name: str = "_forayer_id",
+    default_graph_type="graph",
 ):
     graphs_csv_path = os.path.join(out_path, "graphs.csv")
     vertices_csv_path = os.path.join(out_path, "vertices.csv")
     edges_csv_path = os.path.join(out_path, "edges.csv")
     metadata_csv_path = os.path.join(out_path, "metadata.csv")
-    metadata = _create_metadata(kgs, attribute_type_mapping)
+    import ipdb  # noqa: autoimport
+
+    ipdb.set_trace()  # BREAKPOINT
+
+    metadata = _create_metadata(
+        kgs, label_attr, attribute_type_mapping, vertex_id_attr_name
+    )
+    kg_dict_with_gid = _kgs_dict_to_gradoop_id(kgs)
+    vertex_lines, vid_to_gid = _create_vertex_lines(
+        kg_dict_with_gid, label_attr, metadata["v"], vertex_id_attr_name
+    )
+    edge_lines = _create_edge_lines(kg_dict_with_gid, metadata["e"], vid_to_gid)
+    graph_lines = _create_graph_lines(kg_dict_with_gid, default_graph_type)
+    metadata_lines = _create_metadata_lines(metadata)
+    _write_lines(graph_lines, graphs_csv_path)
+    _write_lines(edge_lines, edges_csv_path)
+    _write_lines(vertex_lines, vertices_csv_path)
+    _write_lines(metadata_lines, metadata_csv_path)

@@ -6,8 +6,12 @@ from forayer.io.from_to_gradoop import (
     EdgeLine,
     VertexLine,
     _create_edge_lines,
+    _create_graph_lines,
     _create_metadata,
+    _create_metadata_lines,
     _create_vertex_lines,
+    _kgs_dict_to_gradoop_id,
+    is_gradoop_id,
     load_from_csv_datasource,
     write_to_csv_datasource,
 )
@@ -65,6 +69,14 @@ def simple_kg():
     return {"simple": KG(entities=entities, rel=rel)}
 
 
+def test_is_gradoop_id():
+    assert is_gradoop_id("000000000000000000000000")
+    assert is_gradoop_id("00000000000000000000000a")
+    assert not is_gradoop_id("1")
+    assert not is_gradoop_id("00000000000000000000000x")
+    assert not is_gradoop_id(000000000000000000000000)
+
+
 def test_load_from_gradoop(gradoopy_kg):
     test_data_folder = os.path.join(
         pathlib.Path(__file__).parent.parent.resolve(), "test_data"
@@ -112,7 +124,7 @@ def test_metadata(gradoopy_kg, simple_kg):
 
     # for simple kg with custom label
     expected_simple_v = {
-        "A": [["a1", "a2"], [str, int]],
+        "A": [["a1", "forayer_id", "a2"], [str, str, int]],
     }
     expected_simple_e = {
         "somerelation": [[], []],
@@ -126,8 +138,29 @@ def test_metadata(gradoopy_kg, simple_kg):
         simple_kg,
         label_attr="my_label",
         attribute_type_mapping=attr_type_mapping,
+        vertex_id_attr_name="forayer_id",
     )
     assert meta_simple == expected_meta_simple
+
+
+def test_create_metadata_lines():
+    metadata = {
+        "g": {"graph1": [[], []], "graph2": [[], []]},
+        "v": {
+            "A": [["a", "b", "c"], [str, int, float]],
+            "B": [["a", "b", "c"], [int, bool, float]],
+        },
+        "e": {"a": [["a", "b"], [int, float]], "b": [["a"], [int]]},
+    }
+    expected_m_lines = [
+        ("g", "graph1", ""),
+        ("g", "graph2", ""),
+        ("v", "A", "a:str,b:int,c:float"),
+        ("v", "B", "a:int,b:bool,c:float"),
+        ("e", "a", "a:int,b:float"),
+        ("e", "b", "a:int"),
+    ]
+    assert expected_m_lines == _create_metadata_lines(metadata)
 
 
 def vertex_line_sort_key(vl):
@@ -145,7 +178,10 @@ def test_vertex_lines(gradoopy_kg, simple_kg):
         "A": [["a", "b", "c"], [str, int, float]],
         "B": [["a", "b", "c"], [int, bool, float]],
     }
-    v_lines = _create_vertex_lines(gradoopy_kg, "_label", metadata)
+    v_lines, empty_vid_to_gid = _create_vertex_lines(
+        gradoopy_kg, "_label", metadata, None
+    )
+    assert empty_vid_to_gid == {}
     expected_v_lines = [
         VertexLine(
             "000000000000000000000000",
@@ -179,13 +215,41 @@ def test_vertex_lines(gradoopy_kg, simple_kg):
     v_lines.sort(key=vertex_line_sort_key)
     assert v_lines == expected_v_lines
 
+    metadata_simple = {
+        "A": [["a1", "forayer_id", "a2"], [str, str, int]],
+    }
+    expected_prop_strings = {
+        "e1": "first entity|e1|123",
+        "e2": "second ent|e2|",
+        "e3": "|e3|124",
+    }
+    adapted_simple_kg = _kgs_dict_to_gradoop_id(simple_kg)
+    v_lines_simple, vid_to_gid = _create_vertex_lines(
+        adapted_simple_kg,
+        "my_label",
+        vertex_metadata=metadata_simple,
+        vertex_id_attr_name="forayer_id",
+    )
+    simple_graph_id = set()
+    v_lines_dict = {line.id: line for line in v_lines_simple}
+    for e_id, e_prop in expected_prop_strings.items():
+        line = v_lines_dict[vid_to_gid[e_id]]
+        assert is_gradoop_id(line.id)
+        assert len(line.graph_ids) == 1
+        assert is_gradoop_id(line.graph_ids[0])
+        simple_graph_id.add(line.graph_ids[0])
+        # there is only one graph
+        assert len(simple_graph_id) == 1
+        assert line.type == "A"
+        assert line.props == e_prop
+
 
 def test_edge_lines(gradoopy_kg, simple_kg):
     metadata = {
         "a": [["a", "b"], [int, float]],
         "b": [["a"], [int]],
     }
-    e_lines = _create_edge_lines(gradoopy_kg, metadata)
+    e_lines = _create_edge_lines(gradoopy_kg, metadata, None)
     expected_e_lines = [
         EdgeLine(
             "uncertain",
@@ -249,15 +313,51 @@ def test_edge_lines(gradoopy_kg, simple_kg):
         assert res.graph_ids == exp.graph_ids
         assert res.props == exp.props
 
+    adapted_simple_kg = _kgs_dict_to_gradoop_id(simple_kg)
+    e_lines_simple = _create_edge_lines(
+        adapted_simple_kg,
+        metadata,
+        {"e1": "000000000000000000000000", "e3": "000000000000000000000002"},
+    )
+    expected_e_lines = [
+        EdgeLine(
+            "000000000000000000000000",
+            ["000000000000000000000000"],
+            "000000000000000000000000",
+            "000000000000000000000002",
+            "somerelation",
+            "",
+        )
+    ]
+    assert expected_e_lines == e_lines_simple
 
-# def test_from_to_gradoop(tmpdir):
-#     test_data_folder = os.path.join(
-#         pathlib.Path(__file__).parent.parent.resolve(), "test_data"
-#     )
-#     kgs = load_from_csv_datasource(
-#         os.path.join(test_data_folder, "gradoop_csv"), graph_name_property="a"
-#     )
-#     out_path = os.path.join(tmpdir, "gradoop_out")
-#     write_to_csv_datasource(kgs, out_path)
-#     kgs2 = load_from_csv_datasource(out_path, graph_name_property="a")
-#     assert kgs == kgs2
+
+def test_g_lines(gradoopy_kg, simple_kg):
+    metadata = {"graph1": [[], []], "graph2": [[], []]}
+    expected_g_lines = [
+        ("000000000000000000000000", "graph1"),
+        ("000000000000000000000001", "graph2"),
+    ]
+    assert expected_g_lines == _create_graph_lines(gradoopy_kg, metadata)
+    adapted_simple_kg = _kgs_dict_to_gradoop_id(simple_kg)
+    expected_simple_lines = [("000000000000000000000000", "test_graph")]
+    assert expected_simple_lines == _create_graph_lines(
+        adapted_simple_kg, metadata, "test_graph"
+    )
+
+
+def test_from_to_gradoop(tmpdir, gradoopy_kg):
+    test_data_folder = os.path.join(
+        pathlib.Path(__file__).parent.parent.resolve(), "test_data"
+    )
+    kgs = load_from_csv_datasource(
+        os.path.join(test_data_folder, "gradoop_csv"), graph_name_property="a"
+    )
+    out_path = os.path.join(tmpdir, "gradoop_out")
+    import ipdb  # noqa: autoimport
+
+    ipdb.set_trace()  # BREAKPOINT
+
+    write_to_csv_datasource(kgs, out_path)
+    kgs2 = load_from_csv_datasource(out_path, graph_name_property="a")
+    assert kgs == kgs2
