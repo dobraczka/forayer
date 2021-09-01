@@ -15,6 +15,13 @@ TYPE_CONVERSION = {
     "boolean": lambda x: x == "true",
 }
 
+INV_TYPES = {
+    str: "string",
+    int: "int",
+    float: "float",
+    bool: "boolean",
+}
+
 VertexLine = namedtuple("VertexLine", ["id", "graph_ids", "type", "props"])
 EdgeLine = namedtuple(
     "EdgeLine", ["id", "graph_ids", "source_id", "target_id", "type", "props"]
@@ -93,11 +100,11 @@ def _prop_creation(element_type, label, metadata, properties, is_edge=False):
     for prop_name_type, prop_value in zip(
         metadata[element_type][label], properties.split("|")
     ):
+        if len(prop_name_type) == 1:
+            continue
         prop_name, prop_type = prop_name_type
         if prop_value != "":
             props[prop_name] = TYPE_CONVERSION[prop_type](prop_value)
-    if is_edge:
-        return {label: props}
     return props
 
 
@@ -133,9 +140,9 @@ def _load_edges(path: str, metadata: Dict[str, Dict[str, List[Tuple[str, str]]]]
         reader = csv.reader(in_file, delimiter=";")
         for row in reader:
             e_id, graphs, source, target, label, properties = row
-            e_props = _prop_creation("e", label, metadata, properties)
+            e_props = _prop_creation("e", label, metadata, properties, is_edge=True)
             for g in _graph_containment(graphs):
-                graph_edges[g][source][target] = e_props
+                graph_edges[g][source][target][label] = e_props
     return nested_ddict2dict(graph_edges)
 
 
@@ -275,6 +282,7 @@ def _create_metadata(
     label_attr: str = "_label",
     attribute_type_mapping: Dict = None,
     vertex_id_attr_name: str = None,
+    graph_name_as_property: str = None,
 ):
     edge_type_mapping = None
     vertex_type_mapping = None
@@ -296,10 +304,11 @@ def _create_metadata(
 
     graph_metadata = {}
     for i, k in enumerate(kgs.values(), start=1):
+        props = {} if graph_name_as_property is None else {graph_name_as_property: str}
         if k.name is None:
-            graph_metadata[f"graph{i}"] = {}
+            graph_metadata[f"graph{i}"] = props
         else:
-            graph_metadata[k.name] = {}
+            graph_metadata[k.name] = props
 
     return _fix_metadata_order(
         {"g": graph_metadata, "e": edge_metadata, "v": vertex_metadata}
@@ -350,45 +359,66 @@ def _create_edge_lines(kgs: Dict[str, KG], edge_metadata: Dict, vid_to_gid: Dict
     for k_name, kg in kgs.items():
         for source_id, target_rel_dict in kg.rel.items():
             for target_id, rel_dict in target_rel_dict.items():
-                prop_line = []
                 if isinstance(rel_dict, str):
                     # in this case
                     # relation does not have attributes
                     # and simply has the relation name
                     # which we use as edge type for gradoop
-                    cur_label = rel_dict
-                else:
-                    cur_label = list(rel_dict.keys())[0]
+                    rel_dict = {rel_dict: {}}
+                for cur_label, prop_dict in rel_dict.items():
+                    prop_line = []
                     for attr_name, exp_type in zip(*edge_metadata[cur_label]):
-                        attr_value = rel_dict[cur_label].get(attr_name, "")
+                        attr_value = prop_dict.get(attr_name, "")
                         if attr_value != "":
                             if exp_type == bool:
                                 attr_value = "true" if attr_value else "false"
                             elif not isinstance(exp_type, str):  # custom type
                                 attr_value = exp_type(attr_value)
                         prop_line.append(str(attr_value))
-                tmp_id = str(source_id) + str(target_id) + str(cur_label)
-                prop_string = "|".join(prop_line)
-                if tmp_id in e_dict:
-                    e_dict[tmp_id].graph_ids.append(k_name)
-                else:
-                    edge_id = int_to_gradoop_id(len(e_dict))
-                    if vid_to_gid is not None:
-                        source_id = vid_to_gid.get(source_id, source_id)
-                        target_id = vid_to_gid.get(target_id, target_id)
-                    e_dict[tmp_id] = EdgeLine(
-                        edge_id, [k_name], source_id, target_id, cur_label, prop_string
-                    )
+                    tmp_id = str(source_id) + str(target_id) + str(cur_label)
+                    prop_string = "|".join(prop_line)
+                    if tmp_id in e_dict:
+                        e_dict[tmp_id].graph_ids.append(k_name)
+                    else:
+                        edge_id = int_to_gradoop_id(len(e_dict))
+                        if vid_to_gid is not None:
+                            source_id = vid_to_gid.get(source_id, source_id)
+                            target_id = vid_to_gid.get(target_id, target_id)
+                        e_dict[tmp_id] = EdgeLine(
+                            edge_id,
+                            [k_name],
+                            source_id,
+                            target_id,
+                            cur_label,
+                            prop_string,
+                        )
     return list(e_dict.values())
 
 
-def _create_graph_lines(kgs: Dict[str, KG], graph_metadata: Dict, default_type="graph"):
+def _create_graph_lines(
+    kgs: Dict[str, KG],
+    graph_metadata: Dict,
+    default_type="graph",
+    graph_name_as_property: str = None,
+):
     g_lines = []
     for g_id, kg in kgs.items():
         if kg.name is None:
-            g_lines.append((g_id, default_type))
+            g_lines.append((g_id, default_type, ""))
         else:
-            g_lines.append((g_id, kg.name))
+            metadata = graph_metadata[kg.name]
+            # TODO graphs cannot really have attributes yet
+            props = []
+            for m_att in metadata[0]:
+                if (
+                    graph_name_as_property is not None
+                    and m_att == graph_name_as_property
+                ):
+                    props.append(kg.name)
+                else:
+                    props.append("")
+            prop_string = "|".join(props)
+            g_lines.append((g_id, kg.name, prop_string))
     return g_lines
 
 
@@ -401,7 +431,7 @@ def _create_metadata_lines(metadata):
                 if isinstance(type_class, str):
                     props_list.append(f"{prop_name}:{type_class}")
                 else:
-                    props_list.append(f"{prop_name}:{type_class.__name__}")
+                    props_list.append(f"{prop_name}:{INV_TYPES[type_class]}")
             props = ",".join(props_list)
             m_lines.append((ele_type, inner_type, props))
     return m_lines
@@ -417,7 +447,10 @@ def _kgs_dict_to_gradoop_id(kgs: Dict) -> Dict:
 def _write_lines(lines, out_path):
     with open(out_path, "w") as out_file:
         for line in lines:
-            out_file.write(";".join(list(line)) + "\n")
+            if isinstance(line, (VertexLine, EdgeLine)):
+                line = list(line)
+                line[1] = "[" + ",".join(line[1]) + "]"
+            out_file.write(";".join([str(ele) for ele in line]) + "\n")
 
 
 def write_to_csv_datasource(
@@ -426,25 +459,63 @@ def write_to_csv_datasource(
     label_attr: str = "_label",
     attribute_type_mapping: Dict = None,
     vertex_id_attr_name: str = "_forayer_id",
-    default_graph_type="graph",
+    default_graph_type: str = "graph",
+    graph_name_as_property: str = None,
+    overwrite: bool = False,
 ):
+    """Write knowledge graph(s) to Gradoop CSV Datasource.
+
+    Parameters
+    ----------
+    kgs : Union[KG, Dict[str, KG]]
+        Knowledge Graph(s) to serialize.
+    out_path : str
+        Folder where this data will be serialized to.
+    label_attr : str, Default = "_label"
+        Vertex attribute to use for Gradoop's special type attribute.
+    attribute_type_mapping : Dict, Default=None
+        Manually set attribute types.
+    vertex_id_attr_name : str, Default="_forayer_id"
+        Save the current entity id as property with this name.
+        If set to None, entity id is not saved.
+    default_graph_type : str
+        Label graphs as this type if they do not have a name.
+    graph_name_as_property : str
+        Save the name of graphs as seperate property.
+    overwrite : bool
+        If True, overwrites existing files at output.
+    """
+    if os.path.exists(out_path) and not overwrite:
+        raise ValueError(f"Path {out_path} already exists")
+    os.makedirs(out_path, exist_ok=True)
     graphs_csv_path = os.path.join(out_path, "graphs.csv")
     vertices_csv_path = os.path.join(out_path, "vertices.csv")
     edges_csv_path = os.path.join(out_path, "edges.csv")
     metadata_csv_path = os.path.join(out_path, "metadata.csv")
-    import ipdb  # noqa: autoimport
-
-    ipdb.set_trace()  # BREAKPOINT
-
     metadata = _create_metadata(
-        kgs, label_attr, attribute_type_mapping, vertex_id_attr_name
+        kgs=kgs,
+        label_attr=label_attr,
+        attribute_type_mapping=attribute_type_mapping,
+        vertex_id_attr_name=vertex_id_attr_name,
+        graph_name_as_property=graph_name_as_property,
     )
     kg_dict_with_gid = _kgs_dict_to_gradoop_id(kgs)
     vertex_lines, vid_to_gid = _create_vertex_lines(
-        kg_dict_with_gid, label_attr, metadata["v"], vertex_id_attr_name
+        kgs=kg_dict_with_gid,
+        label_attr=label_attr,
+        vertex_metadata=metadata["v"],
+        vertex_id_attr_name=vertex_id_attr_name,
     )
-    edge_lines = _create_edge_lines(kg_dict_with_gid, metadata["e"], vid_to_gid)
-    graph_lines = _create_graph_lines(kg_dict_with_gid, default_graph_type)
+
+    edge_lines = _create_edge_lines(
+        kgs=kg_dict_with_gid, edge_metadata=metadata["e"], vid_to_gid=vid_to_gid
+    )
+    graph_lines = _create_graph_lines(
+        kgs=kg_dict_with_gid,
+        graph_metadata=metadata["g"],
+        default_type=default_graph_type,
+        graph_name_as_property=graph_name_as_property,
+    )
     metadata_lines = _create_metadata_lines(metadata)
     _write_lines(graph_lines, graphs_csv_path)
     _write_lines(edge_lines, edges_csv_path)

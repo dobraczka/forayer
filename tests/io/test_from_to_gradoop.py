@@ -155,8 +155,8 @@ def test_create_metadata_lines():
     expected_m_lines = [
         ("g", "graph1", ""),
         ("g", "graph2", ""),
-        ("v", "A", "a:str,b:int,c:float"),
-        ("v", "B", "a:int,b:bool,c:float"),
+        ("v", "A", "a:string,b:int,c:float"),
+        ("v", "B", "a:int,b:boolean,c:float"),
         ("e", "a", "a:int,b:float"),
         ("e", "b", "a:int"),
     ]
@@ -300,6 +300,7 @@ def test_edge_lines(gradoopy_kg, simple_kg):
             "",
         ),
     ]
+    assert len(expected_e_lines) == len(e_lines)
     expected_e_lines.sort(key=edge_line_sort_key)
     e_lines.sort(key=edge_line_sort_key)
     for res, exp in zip(e_lines, expected_e_lines):
@@ -316,8 +317,8 @@ def test_edge_lines(gradoopy_kg, simple_kg):
     adapted_simple_kg = _kgs_dict_to_gradoop_id(simple_kg)
     e_lines_simple = _create_edge_lines(
         adapted_simple_kg,
-        metadata,
-        {"e1": "000000000000000000000000", "e3": "000000000000000000000002"},
+        edge_metadata={"somerelation": [[], []]},
+        vid_to_gid={"e1": "000000000000000000000000", "e3": "000000000000000000000002"},
     )
     expected_e_lines = [
         EdgeLine(
@@ -329,20 +330,29 @@ def test_edge_lines(gradoopy_kg, simple_kg):
             "",
         )
     ]
-    assert expected_e_lines == e_lines_simple
+    assert e_lines_simple == expected_e_lines
 
 
 def test_g_lines(gradoopy_kg, simple_kg):
     metadata = {"graph1": [[], []], "graph2": [[], []]}
     expected_g_lines = [
-        ("000000000000000000000000", "graph1"),
-        ("000000000000000000000001", "graph2"),
+        ("000000000000000000000000", "graph1", ""),
+        ("000000000000000000000001", "graph2", ""),
     ]
     assert expected_g_lines == _create_graph_lines(gradoopy_kg, metadata)
     adapted_simple_kg = _kgs_dict_to_gradoop_id(simple_kg)
-    expected_simple_lines = [("000000000000000000000000", "test_graph")]
+    expected_simple_lines = [("000000000000000000000000", "test_graph", "")]
     assert expected_simple_lines == _create_graph_lines(
         adapted_simple_kg, metadata, "test_graph"
+    )
+
+    metadata = {"graph1": [["a"], [str]], "graph2": [["a"], [str]]}
+    expected_g_lines_with_name = [
+        ("000000000000000000000000", "graph1", "graph1"),
+        ("000000000000000000000001", "graph2", "graph2"),
+    ]
+    assert expected_g_lines_with_name == _create_graph_lines(
+        gradoopy_kg, metadata, graph_name_as_property="a"
     )
 
 
@@ -354,10 +364,10 @@ def test_from_to_gradoop(tmpdir, gradoopy_kg):
         os.path.join(test_data_folder, "gradoop_csv"), graph_name_property="a"
     )
     out_path = os.path.join(tmpdir, "gradoop_out")
-    import ipdb  # noqa: autoimport
+    write_to_csv_datasource(
+        kgs, out_path, vertex_id_attr_name=None, graph_name_as_property="a"
+    )
 
-    ipdb.set_trace()  # BREAKPOINT
-
-    write_to_csv_datasource(kgs, out_path)
     kgs2 = load_from_csv_datasource(out_path, graph_name_property="a")
-    assert kgs == kgs2
+    assert kgs["000000000000000000000000"] == kgs2["000000000000000000000000"]
+    assert kgs["000000000000000000000001"] == kgs2["000000000000000000000001"]
