@@ -7,7 +7,16 @@ from forayer.knowledge_graph import ERTask
 
 
 class OpenEADataset(ZipDataset):
-    """Dataset class for OpenEA benchmark datasets."""
+    """The OpenEA datasets contain entity resolution tasks with samples from popular knowledge graphs.
+
+    Several different tasks are available with snippets from DBpedia, Wikidata and YAGO.
+    Different sizes refer to the number of entities in the respective graphs (15K or 100K).
+    For each setting two versions are available, where version 1 has lower connectivity
+    in the graph compared to version 2.
+
+    More information can be found at the respective `github repository <https://github.com/nju-websoft/OpenEA>`_ and
+    the benchmark publication: Sun et al (2020) `A Benchmarking Study of Embedding-based Entity Alignment for Knowledge Graphs`, *VLDB* <http://www.vldb.org/pvldb/vol13/p2326-sun.pdf>
+    """
 
     DS_NAME = "OpenEA"
 
@@ -30,7 +39,7 @@ class OpenEADataset(ZipDataset):
         Parameters
         ----------
         ds_pair : str
-            name of ds pair
+            name of ds pair (either "D-W" or "D-Y")
         size : str
             size of the task (either "15K" or "100K")
         version : int

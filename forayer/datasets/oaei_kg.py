@@ -21,7 +21,17 @@ OAEITaskFiles = namedtuple(
 
 
 class OAEIKGDataset(RemoteDataset):
-    """Dataset class for OAEI (Ontology Alignment Evaluation Initiative) Knowledge Graph Track tasks."""
+    """The  OAEI (Ontology Alignment Evaluation Initiative) Knowledge Graph Track tasks contain graphs created from fandom wikis.
+
+    Five integration tasks are available:
+        - starwars-swg
+        - starwars-swtor
+        - marvelcinematicuniverse-marvel
+        - memoryalpha-memorybeta
+        - memoryalpha-stexpanded
+
+    More information can be found at the `website <http://oaei.ontologymatching.org/2019/knowledgegraph/index.html>`_.
+    """
 
     DS_NAME = "OAEI_KG_Track"
 
