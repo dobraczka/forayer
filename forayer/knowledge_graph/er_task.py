@@ -57,27 +57,27 @@ class ERTask:
     ):
         """Create a sample of the ERTask.
 
-            Takes n clusters and creates the respective subgraphs.
-            If unmatched is provided adds a number of entities without
-            match to the subgraphs.
+        Takes n clusters and creates the respective subgraphs.
+        If unmatched is provided adds a number of entities without
+        match to the subgraphs.
 
-            Parameters
-            ----------
-            n : int
-                Number of clusters.
-            seed : Union[int, random.Random]
-                Seed for randomness or seeded random.Random object.
-                Default is None.
-            unmatched : int
-                Number of unmatched entities to include. Default is None.
+        Parameters
+        ----------
+        n : int
+            Number of clusters.
+        seed : Union[int, random.Random]
+            Seed for randomness or seeded random.Random object.
+            Default is None.
+        unmatched : int
+            Number of unmatched entities to include. Default is None.
 
-            Returns
-            -------
-            ERTask
-                downsampled ERTask
+        Returns
+        -------
+        ERTask
+            downsampled ERTask
 
-            Examples
-            --------
+        Examples
+        --------
         >>> from forayer.datasets import OpenEADataset
         >>> ds = OpenEADataset(ds_pair="D_W",size="15K",version=1)
         >>> ds.er_task.sample(n=10,unmatched=20)

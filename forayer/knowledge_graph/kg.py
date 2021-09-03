@@ -241,6 +241,8 @@ class KG:
         if e_id in self._inv_rel:
             for other_id in self._inv_rel[e_id]:
                 del self.rel[other_id][e_id]
+                if len(self.rel[other_id]) == 0:
+                    del self.rel[other_id]
             del self._inv_rel[e_id]
 
     def _add_inv_rel(self, target, source):

@@ -116,13 +116,10 @@ class ClusterHelper:
 
         Parameters
         ----------
-        data : Union[
-                    List[Set[str]],
-                    Dict[str, str],
-                    Dict[int,Set[str]],
-                ]
+        data : Union[List[Set[str]], Dict[str, str], Dict[int,Set[str]]]
             Clusters either as list of sets, or dict with
             links as key, value pairs
+
         Raises
         ------
         TypeError
