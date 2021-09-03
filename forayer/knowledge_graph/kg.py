@@ -337,10 +337,10 @@ class KG:
                     raise ValueError(value_not_found_msg)
                 # here we can simply remove the relationship
         del self.rel[source][target]
-        if self.rel[source] == {}:
+        if len(self.rel[source]) == 0:
             del self.rel[source]
         self._inv_rel[target].remove(source)
-        if self._inv_rel[target] == {}:
+        if len(self._inv_rel[target]) == 0:
             del self._inv_rel[target]
 
     def sample(self, n: int, seed: Union[int, random.Random] = None) -> KG:

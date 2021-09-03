@@ -371,6 +371,7 @@ def test_remove_entity(simple_kg_entites_rel_123):
         "e1": {"a1": "first entity", "a2": 123},
         "e2": {"a1": "second ent"},
     }
+    assert kg1.rel == {}
 
 
 def test_add_rel(simple_kg_entites_rel_123):
@@ -422,3 +423,20 @@ def test_relation_names(simple_kg_entites_rel_123):
     entities, rel = simple_kg_entites_rel_123
     kg = KG(entities=entities, rel=rel)
     assert {"somerelation"} == kg.relation_names
+
+
+def test_multiple_adding_removing_example(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg = KG(entities=entities, rel=rel, name="mykg")
+    kg.add_rel("e1", "e3", {"relation_name": {"rel_att": 1}})
+    kg.add_entity("e4", {"a1": "new"})
+    kg.remove_entity("e3")
+    kg.add_rel("e1", "e4", "newrel")
+    kg.remove_rel("e1", "e4")
+    assert kg.entities == {
+        "e1": {"a1": "first entity", "a2": 123},
+        "e2": {"a1": "second ent"},
+        "e4": {"a1": "new"},
+    }
+    assert len(kg.rel) == 0
+    assert len(kg._inv_rel) == 0
