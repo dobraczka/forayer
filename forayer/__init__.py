@@ -1,3 +1,4 @@
+import sys
 import warnings
 
 
@@ -26,3 +27,11 @@ def warning_formatter(msg, category, filename, lineno, line=None):
 
 
 warnings.formatwarning = warning_formatter
+
+
+if sys.version_info[1] > 7:
+    from importlib.metadata import version  # pragma: no cover
+else:
+    from importlib_metadata import version  # pragma: no cover
+
+__version__ = version(__package__)
