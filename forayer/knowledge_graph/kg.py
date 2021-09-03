@@ -201,7 +201,7 @@ class KG:
             entities=wanted_entities, rel=nested_ddict2dict(wanted_rel), name=self.name
         )
 
-    def add_entity(self, e_id: str, e_attr: Dict):
+    def add_entity(self, e_id: str, e_attr: Dict, overwrite: bool = False):
         """Add an entity to the knowledge graph.
 
         Parameters
@@ -210,17 +210,19 @@ class KG:
             Id of the entity you want to add.
         e_attr : Dict
             Attributes of the entity you want to add.
+        overwrite : bool
+            If true, overwrite existing
 
         Raises
         ------
         ValueError
             If entity id is already present.
         """
-        if e_id in self.entities:
+        if e_id in self.entities and not overwrite:
             raise ValueError(f"{e_id} already exists: {self.entities[e_id]}")
         self.entities[e_id] = e_attr
 
-    def remove_entity(self, e_id: str) -> bool:
+    def remove_entity(self, e_id: str):
         """Remove the entity with the id.
 
         Parameters
@@ -228,21 +230,116 @@ class KG:
         e_id : str
             Id of entity you want to remove.
 
+        Raises
+        ------
+        KeyError
+            If no entity with this id exists
+        """
+        del self.entities[e_id]
+        if e_id in self.rel:
+            del self.rel[e_id]
+        if e_id in self._inv_rel:
+            for other_id in self._inv_rel[e_id]:
+                del self.rel[other_id][e_id]
+            del self._inv_rel[e_id]
+
+    def _add_inv_rel(self, target, source):
+        if target not in self._inv_rel:
+            self._inv_rel[target] = {source}
+        else:
+            if source not in self._inv_rel[target]:
+                current_value = self._inv_rel[target]
+                if not isinstance(current_value, set):
+                    current_value = {current_value}
+                current_value.add(source)
+                self._inv_rel[target] = current_value
+
+    def add_rel(self, source: str, target: str, value, overwrite: bool = False) -> bool:
+        """Add relationhip with value.
+
+        Parameters
+        ----------
+        source : str
+            Entity id of source.
+        target : str
+            Entity id of target.
+        value
+            Value of relation, e.g. relation name.
+        overwrite : bool
+            If true, overwrites existing values for already present
+            relationship, else appends the value to existing.
+
         Returns
         -------
         bool
-            True if entity was contained and therefore successfully removed, False else.
+            True if new information was added, else false.
         """
-        if e_id in self.entities:
-            del self.entities[e_id]
-            if e_id in self.rel:
-                del self.rel[e_id]
-            if e_id in self._inv_rel:
-                for other_id in self._inv_rel[e_id]:
-                    del self.rel[other_id][e_id]
-                del self._inv_rel[e_id]
-            return True
-        return False
+        if (
+            source in self.rel
+            and target in self.rel[source]
+            and value == self.rel[source][target]
+        ):
+            return False
+        elif source not in self.rel:
+            self.rel[source] = {target: value}
+            self._add_inv_rel(target, source)
+        elif target not in self.rel[source]:
+            self.rel[source][target] = value
+            self._add_inv_rel(target, source)
+        else:  # new value for existing rel
+            if overwrite:
+                self.rel[source][target] = value
+            else:
+                current_value = self.rel[source][target]
+                if not isinstance(current_value, set):
+                    current_value = {current_value}
+                current_value.add(value)
+                self.rel[source][target] = current_value
+        return True
+
+    def remove_rel(self, source: str, target: str, value=None):
+        """Remove relationship or relationship value.
+
+        Parameters
+        ----------
+        source : str
+            Entity id of source.
+        target : str
+            Entity id of target.
+        value
+            If provided: remove only this specific value.
+
+        Raises
+        ------
+        KeyError
+            If relationship does not exist
+        ValueError
+            If value does not exist in relationship
+        """
+        if value is not None:
+            current_value = self.rel[source][target]
+            value_not_found_msg = (
+                f"Cannot remove {value} from {source} -> {target}, because it is not"
+                f" present in {current_value}"
+            )
+            if isinstance(current_value, set):
+                if value not in current_value:
+                    raise ValueError(value_not_found_msg)
+                current_value.remove(value)
+                if len(current_value) == 1:
+                    current_value = next(iter(current_value))
+                self.rel[source][target] = current_value
+                return True
+            else:
+                if value != current_value:
+                    raise ValueError(value_not_found_msg)
+                # here we can simply remove the relationship
+        del self.rel[source][target]
+        if self.rel[source] == {}:
+            del self.rel[source]
+        self._inv_rel[target].remove(source)
+        if self._inv_rel[target] == {}:
+            del self._inv_rel[target]
 
     def sample(self, n: int, seed: Union[int, random.Random] = None) -> KG:
         """Return a sample of the knowledge graph with n entities.
@@ -446,6 +543,8 @@ class KG:
         rdflib.term.Literal('first entity')
 
         You can use custom prefixes and rdflib namespaces or strings for mappings
+
+        >>> from rdflib.namespace import FOAF
         >>> my_prefix = "http://example.org/"
         >>> my_mapping = {"a1":FOAF.name, "a2":"http://example.org/attr"}
         >>> rdf_g = kg.to_rdflib(prefix=my_prefix,attr_mapping=my_mapping)
@@ -524,6 +623,30 @@ class AttributeEmbeddedKG(KG):
             an attribute vectorizer to use for retrieving the embeddings
         name : str, optional
             name of the kg, default is None
+
+        Examples
+        --------
+        >>> from forayer.knowledge_graph import AttributeEmbeddedKG
+        >>> from forayer.datasets import OpenEADataset
+        >>> dw15kv1 = OpenEADataset(ds_pair="D_W",size="15K",version=1)
+        >>> from forayer.transformation.word_embedding import AttributeVectorizer
+
+        For demonstration we take a sample
+
+        >>> dbpedia = dw15kv1.er_task.kgs["DBpedia"].sample(1000)
+
+        Initialize the Vectorizer with the pre-trained embeddings
+
+        >>> vectorizer = AttributeVectorizer(embedding_type="fasttext")
+
+        If you have them downloaded already you can also supply the path
+
+        >>> vectorizer = AttributeVectorizer(embedding_type="fasttext",
+                vectors_path=f"somepath/fasttext/wiki.simple.bin")
+
+        Then create a knowledge graphs with embedded attribute tokens
+
+        >>> dbp_embedded = AttributeEmbeddedKG.from_kg(dbpedia, vectorizer=vectorizer)
         """
         self.vectorizer = vectorizer
         self.vectorizer.reset_token_count()

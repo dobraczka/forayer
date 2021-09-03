@@ -34,6 +34,7 @@ def test_basic(simple_kg_entites_rel_123):
     kg = KG(entities=entities, rel=rel, name="kg1")
     assert kg["e1"] == kg.entities["e1"]
     assert kg[["e1", "e2", "e3"]] == entities
+    assert kg._inv_rel == {"e3": {"e1"}}
 
     kg2 = KG(entities=entities, rel=rel, name="kg1")
     assert kg == kg2
@@ -348,18 +349,67 @@ def test_add_kgs(simple_kg_entites_rel_123):
 def test_add_entity(simple_kg_entites_rel_123):
     entities, rel = simple_kg_entites_rel_123
     kg1 = KG(entities=entities, rel=rel)
+    new_e4 = {"a1": "test"}
+    kg1.add_entity("e4", new_e4)
+    assert kg1["e4"] == new_e4
+
+    new_e3 = {"a2": 124}
     with pytest.raises(ValueError):
-        kg1.add_entity("e3", {"a2": 124})
-    kg1.add_entity("e4", {"a1": "test"})
-    assert kg1["e4"] == {"a1": "test"}
+        kg1.add_entity("e3", new_e3)
+    kg1.add_entity("e3", new_e3, overwrite=True)
+    assert kg1["e3"] == new_e3
 
 
 def test_remove_entity(simple_kg_entites_rel_123):
     entities, rel = simple_kg_entites_rel_123
     kg1 = KG(entities=entities, rel=rel)
-    assert not kg1.remove_entity("e6")
-    assert kg1.remove_entity("e3")
+    with pytest.raises(KeyError):
+        kg1.remove_entity("e6")
+    kg1.remove_entity("e3")
     assert "e3" not in kg1
+    assert kg1.entities == {
+        "e1": {"a1": "first entity", "a2": 123},
+        "e2": {"a1": "second ent"},
+    }
+
+
+def test_add_rel(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg1 = KG(entities=entities, rel=rel)
+    assert not kg1.add_rel("e1", "e3", "somerelation")
+
+    kg1.add_rel("e1", "e3", "otherrelation")
+    kg1.add_rel("e1", "e2", "somerelation")
+    assert kg1.rel["e1"] == {
+        "e2": "somerelation",
+        "e3": {"otherrelation", "somerelation"},
+    }
+    assert kg1._inv_rel == {"e2": {"e1"}, "e3": {"e1"}}
+    kg1.add_rel("e1", "e3", "otherrelation", overwrite=True)
+    assert kg1.rel["e1"] == {
+        "e2": "somerelation",
+        "e3": "otherrelation",
+    }
+    assert kg1._inv_rel == {"e2": {"e1"}, "e3": {"e1"}}
+
+
+def test_remove_rel(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    e2_rel = {"e3": {"otherrel", "somerel"}}
+    rel["e2"] = e2_rel
+    kg1 = KG(entities=entities, rel=rel)
+    with pytest.raises(ValueError):
+        kg1.remove_rel("e1", "e3", "nonexisting")
+    with pytest.raises(KeyError):
+        kg1.remove_rel("e1", "e6")
+        kg1.remove_rel("e6", "e3")
+    kg1.remove_rel("e1", "e3")
+    assert kg1.rel == {"e2": e2_rel}
+    assert kg1._inv_rel == {"e3": {"e2"}}
+
+    kg1.remove_rel("e2", "e3", "otherrel")
+    assert kg1.rel == {"e2": {"e3": "somerel"}}
+    assert kg1._inv_rel == {"e3": {"e2"}}
 
 
 def test_attribute_names(simple_kg_entites_rel_123):
