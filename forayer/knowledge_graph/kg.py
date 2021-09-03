@@ -291,9 +291,9 @@ class KG:
                 self.rel[source][target] = value
             else:
                 current_value = self.rel[source][target]
-                if not isinstance(current_value, set):
-                    current_value = {current_value}
-                current_value.add(value)
+                if not isinstance(current_value, list):
+                    current_value = [current_value]
+                current_value.append(value)
                 self.rel[source][target] = current_value
         return True
 

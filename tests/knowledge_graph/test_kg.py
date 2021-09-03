@@ -378,11 +378,11 @@ def test_add_rel(simple_kg_entites_rel_123):
     kg1 = KG(entities=entities, rel=rel)
     assert not kg1.add_rel("e1", "e3", "somerelation")
 
-    kg1.add_rel("e1", "e3", "otherrelation")
     kg1.add_rel("e1", "e2", "somerelation")
+    kg1.add_rel("e1", "e3", {"otherrelation": {"with_att": 1}})
     assert kg1.rel["e1"] == {
         "e2": "somerelation",
-        "e3": {"otherrelation", "somerelation"},
+        "e3": ["somerelation", {"otherrelation": {"with_att": 1}}],
     }
     assert kg1._inv_rel == {"e2": {"e1"}, "e3": {"e1"}}
     kg1.add_rel("e1", "e3", "otherrelation", overwrite=True)
