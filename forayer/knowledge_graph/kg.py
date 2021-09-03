@@ -489,6 +489,24 @@ class KG:
                         rel_names.add(probably_name[0])
         return rel_names
 
+    def _rel_signatures(self):
+        all_rels = set()
+        for left, right_dict in self.rel.items():
+            for right, rel_values in right_dict.items():
+                if isinstance(rel_values, list):
+                    for rels in rel_values:
+                        if isinstance(rels, dict):
+                            for inner_rel_names in rels.keys():
+                                all_rels.add(left + right + str(inner_rel_names))
+                        else:
+                            all_rels.add(left + right + str(rels))
+                elif isinstance(rel_values, dict):
+                    for inner_rel_names in rel_values.keys():
+                        all_rels.add(left + right + str(inner_rel_names))
+                else:
+                    all_rels.add(left + right + str(rel_values))
+        return all_rels
+
     def info(self) -> str:
         """Print general information about this object.
 
@@ -507,10 +525,11 @@ class KG:
             }
         )
         num_ent_rel = len(set(self.rel.keys()).union(set(self._inv_rel.keys())))
+        num_rel = len(self._rel_signatures())
         name = "KG" if self.name is None else self.name
         return (
             f"{name}: (# entities: {len(self)}, # entities_with_rel: {num_ent_rel}, #"
-            f" rel: {len(self.rel)}, # entities_with_attributes: {num_ent}, #"
+            f" rel: {num_rel}, # entities_with_attributes: {num_ent}, #"
             f" attributes: {num_attr_name}, # attr_values: {num_attr_values})"
         )
 

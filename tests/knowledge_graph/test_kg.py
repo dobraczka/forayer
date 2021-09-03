@@ -434,6 +434,7 @@ def test_multiple_adding_removing_example(simple_kg_entites_rel_123):
     entities, rel = simple_kg_entites_rel_123
     kg = KG(entities=entities, rel=rel, name="mykg")
     kg.add_rel("e1", "e3", {"relation_name": {"rel_att": 1}})
+    assert "# rel: 2" in kg.info()
     kg.add_entity("e4", {"a1": "new"})
     kg.remove_entity("e3")
     kg.add_rel("e1", "e4", "newrel")
