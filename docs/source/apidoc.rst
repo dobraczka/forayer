@@ -46,6 +46,7 @@ Datasets
 
 IO
 ==
+.. _io_ref:
 
 .. automodule:: forayer.input_output
     :no-members:
@@ -57,9 +58,9 @@ IO
    :nosignatures:
    :toctree: _autosummary
 
-    forayer.io.from_to_gradoop
-    forayer.io.from_to_open_ea
-    forayer.io.from_to_rdf
+    forayer.input_output.from_to_gradoop
+    forayer.input_output.from_to_open_ea
+    forayer.input_output.from_to_rdf
 
 Transformation
 ==============

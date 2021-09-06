@@ -10,6 +10,80 @@ from rdflib.term import Literal
 from tqdm import tqdm
 
 
+def load_from_rdf(
+    in_path: str,
+    literal_cleaning_func: Callable = None,
+    format: str = None,
+    kg_name: str = None,
+    multi_value: Callable = None,
+) -> KG:
+    """Create knowledge graph object from rdf source.
+
+    Parameters
+    ----------
+    in_path : str
+        Path of triple file.
+    literal_cleaning_func: Callable
+        Function to preprocess literals,
+        if None will simply cast to python types.
+    format : str
+        Triple format ("xml”, “n3” (use for turtle), “nt” or “trix”).
+    kg_name : str
+        How to name the knowledge graph object.
+    multi_value : Callable
+        How to handle multiple attribute values for an
+        entity, attribute name combination.
+        Default creates a set and adds to it
+
+    Returns
+    -------
+    KG
+        the loaded kg object
+    """
+    if literal_cleaning_func is None:
+        literal_cleaning_func = cast_to_python_type
+    if multi_value is None:
+        multi_value = add_multi_value
+    g = Graph()
+    logging.info(f"Reading graph from {in_path}. This might take a while...")
+    g.parse(in_path, format=format)
+    entities = defaultdict(dict)
+    rel = defaultdict(dict)
+    for stmt in tqdm(g, desc="Transforming graph", total=len(g)):
+        s, p, o = stmt
+        if isinstance(o, Literal):
+            value = literal_cleaning_func(o)
+            if str(p) in entities[str(s)]:
+                value = multi_value(entities[str(s)][str(p)], value)
+            entities[str(s)][str(p)] = value
+        else:
+            rel[str(s)][str(o)] = str(p)
+    return KG(entities=entities, rel=rel, name=kg_name)
+
+
+def write_to_rdf(
+    kg: KG, out_path: str, format: str, prefix: str = "", attr_mapping: dict = None
+):
+    """Write the forayer knowledge graph to a rdf serialization format.
+
+    Parameters
+    ----------
+    kg : KG
+        The knowledge graph that will be serialized.
+    out_path : str
+        The path where it should be serialized to.
+    format : str
+        The desired rdf format.
+    prefix : str
+        Prefix for the entities in the graph.
+    attr_mapping : dict
+       Mapping of attribute names.
+    """
+    kg.to_rdflib(prefix=prefix, attr_mapping=attr_mapping).serialize(
+        destination=out_path, format=format
+    )
+
+
 def cast_to_python_type(lit: rdflib.term.Literal):
     """Casts a literal to the respective python type.
 
@@ -48,76 +122,3 @@ def add_multi_value(prev, new) -> Set:
         prev = {prev}
     prev.add(new)
     return prev
-
-
-def load_from_rdf(
-    in_path: str,
-    literal_cleaning_func: Callable = None,
-    format: str = None,
-    kg_name: str = None,
-    multi_value: Callable = None,
-) -> KG:
-    """Create knowledge graph object from rdf source.
-
-    Parameters
-    ----------
-    in_path : str
-        Path of triple file.
-    literal_cleaning_func: Callable
-        Function to preprocess literals,
-        if None will simply cast to python types.
-    format : str
-        Triple format ("xml”, “n3” (use for turtle), “nt” or “trix”).
-    kg_name : str
-        How to name the knowledge graph object.
-    multi_value : Callable
-        How to handle multiple attribute values for an
-        entity, attribute name combination.
-        Default creates a set and adds to it
-    Returns
-    -------
-    KG
-        the loaded kg object
-    """
-    if literal_cleaning_func is None:
-        literal_cleaning_func = cast_to_python_type
-    if multi_value is None:
-        multi_value = add_multi_value
-    g = Graph()
-    logging.info(f"Reading graph from {in_path}. This might take a while...")
-    g.parse(in_path, format=format)
-    entities = defaultdict(dict)
-    rel = defaultdict(dict)
-    for stmt in tqdm(g, desc="Transforming graph", total=len(g)):
-        s, p, o = stmt
-        if isinstance(o, Literal):
-            value = literal_cleaning_func(o)
-            if str(p) in entities[str(s)]:
-                value = multi_value(entities[str(s)][str(p)], value)
-            entities[str(s)][str(p)] = value
-        else:
-            rel[str(s)][str(o)] = str(p)
-    return KG(entities=entities, rel=rel, name=kg_name)
-
-
-def write_to_rdf(
-    kg: KG, out_path: str, format: str, prefix: str = "", attr_mapping: dict = None
-):
-    """Writes the forayer knowledge graph to a rdf serialization format.
-
-    Parameters
-    ----------
-    kg : KG
-        The knowledge graph that will be serialized.
-    out_path : str
-        The path where it should be serialized to.
-    format : str
-        The desired rdf format.
-    prefix : str
-        Prefix for the entities in the graph.
-    attr_mapping : dict
-       Mapping of attribute names.
-    """
-    kg.to_rdflib(prefix=prefix, attr_mapping=attr_mapping).serialize(
-        destination=out_path, format=format
-    )

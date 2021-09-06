@@ -200,7 +200,60 @@ This takes 10 matched entities. If you want non-matches in your sample as well t
   # attributes: 16, # attr_values: 59),
   Wikidata: (# entities: 14, # entities_with_rel: 0,
   # rel: 0, # entities_with_attributes: 14,
-  # attributes: 14, # attr_values: 115)},
+  # attributes: 14, # attr_values: 115)
+  },
   ClusterHelper(# elements:20, # clusters:10))
 
 For all sampling methods in forayer it is possible to provide a seed for reproducibility.
+
+Loading and writing data
+========================
+Forayer enables you to load data from different dataformats.
+
+RDF Data
+--------
+Loading knowledge graphs from rdf datasources is very simple and all common serialization formats are supported. Even remote files can be loaded:
+
+.. code-block:: python
+
+    >>> from forayer.input_output.from_to_rdf import load_from_rdf
+    >>> kg = load_from_rdf("http://www.w3.org/People/Berners-Lee/card")
+    >>> kg['https://www.w3.org/People/Berners-Lee/card#i']['http://xmlns.com/foaf/0.1/givenname']
+    'Timothy'
+
+Writing is similarly easy:
+
+.. code-block:: python
+
+    >>> from forayer.input_output.from_to_rdf import write_to_rdf
+    >>> out_path = ...
+    >>> write_to_rdf(kg, out_path=out_path, format="turtle")
+
+Gradoop CSV Datasource
+----------------------
+You can load and write data from the `Gradoop format<https://github.com/dbs-leipzig/gradoop/wiki/Gradoop-DataSources#CSVDataSource>`:
+
+.. code-block:: python
+
+    >>> from forayer.input_output.from_to_gradoop import load_from_csv_datasource
+
+    >>> data_folder_path = ...
+    >>> kgs = load_from_csv_datasource(data_folder_path)
+
+Since Gradoop gives graphs a specific type label you can either have that as a graph name, or specify a different property for the graph_name with the `graph_name_property` keyword.
+The loaded `kgs` is a dictionary of graph names and graphs.
+
+For writing you have to provide all vertices with a special attribute "_label" or provide another attribute that could be used instead to specify the graph type.
+
+.. code-block:: python
+
+    >>> from forayer.input_output.from_to_gradoop import write_to_csv_datasource
+
+    >>> out_path = ...
+    >>> write_to_csv_datasource(kgs, out_path)
+
+For more information on in- and outputs see the :ref:`API reference <io_ref>` for the input_output module.
+
+Interactive Exploration
+=======================
+To get a better understanding of the data you are working with certain common plotting possibilities are already provided. For an overview look int `the notebooks folder <https://github.com/dobraczka/forayer/tree/main/notebooks>`_.
