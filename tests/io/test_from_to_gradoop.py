@@ -2,7 +2,7 @@ import os
 import pathlib
 
 import pytest
-from forayer.io.from_to_gradoop import (
+from forayer.input_output.from_to_gradoop import (
     EdgeLine,
     VertexLine,
     _create_edge_lines,

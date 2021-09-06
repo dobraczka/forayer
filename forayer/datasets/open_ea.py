@@ -2,7 +2,7 @@
 import os
 
 from forayer.datasets.base_dataset import ZipDataset
-from forayer.io.from_to_open_ea import from_openea
+from forayer.input_output.from_to_open_ea import from_openea
 from forayer.knowledge_graph import ERTask
 
 

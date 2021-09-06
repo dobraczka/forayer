@@ -2,7 +2,7 @@ import datetime
 import os
 import pathlib
 
-from forayer.io.from_to_rdf import load_from_rdf, write_to_rdf
+from forayer.input_output.from_to_rdf import load_from_rdf, write_to_rdf
 
 
 def test_from_rdf():
