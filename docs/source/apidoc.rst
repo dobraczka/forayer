@@ -7,8 +7,8 @@ This is the API documentation for ``forayer``.
 .. _data_ref:
 
 
-Knowledge Graph: :mod:`forayer.knowledge_graph`
-==================================================
+Knowledge Graph
+===============
 
 .. automodule:: forayer.knowledge_graph
     :no-members:
@@ -26,8 +26,8 @@ Knowledge Graph: :mod:`forayer.knowledge_graph`
     forayer.knowledge_graph.ERTask
 
 
-Datasets: :mod:`forayer.datasets`
-==================================================
+Datasets
+========
 .. _datasets_ref:
 
 .. automodule:: forayer.datasets
@@ -44,10 +44,10 @@ Datasets: :mod:`forayer.datasets`
     forayer.datasets.OAEIKGDataset
 
 
-IO: :mod:`forayer.io`
-==================================================
+IO
+==
 
-.. automodule:: forayer.io
+.. automodule:: forayer.input_output
     :no-members:
     :no-inherited-members:
 
@@ -61,8 +61,8 @@ IO: :mod:`forayer.io`
     forayer.io.from_to_open_ea
     forayer.io.from_to_rdf
 
-Transformation: :mod:`forayer.transformation`
-==================================================
+Transformation
+==============
 
 .. automodule:: forayer.transformation
     :no-members:

@@ -1,3 +1,4 @@
+========
 Overview
 ========
 
@@ -47,6 +48,9 @@ Decide to work with a smaller snippet of the resolution task:
 
 And much more can be found in the :ref:`user guide <guide>`.
 
+Installation
+============
+
 You can install forayer via pip:
 
 .. code-block:: bash
@@ -59,7 +63,7 @@ You can install forayer via pip:
    :hidden:
    :caption: Documentation
 
-   User guide <source/guide/index>
+   User guide <source/user_guide>
    forayer API <source/apidoc>
 
 
