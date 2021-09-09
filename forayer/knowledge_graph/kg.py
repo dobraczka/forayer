@@ -47,7 +47,7 @@ class KG:
         >>> kg = KG(entities, relations, "mykg")
         """
         self.entities = entities
-        self.rel = rel
+        self.rel = rel if rel is not None else {}
         inv_rel = {}
         if rel is not None:
             for left_ent, right_ent_rel in rel.items():

@@ -3,3 +3,4 @@
   * all_pairs
   * number_of_links
   * enhanced contains function
+- Added entity resolution quality metrics

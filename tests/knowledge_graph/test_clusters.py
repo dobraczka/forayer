@@ -128,12 +128,12 @@ def test_sample():
 def test_number_of_links():
     clusters = {0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
     ch = ClusterHelper(clusters)
-    ch.number_of_links == 3
+    assert ch.number_of_links == 3
     ch.add({"a4", "4"})
-    ch.number_of_links == 4
+    assert ch.number_of_links == 4
     ch.add((0, "a5"))
     ch.add((0, "a6"))
-    ch.number_of_links == 9
+    assert ch.number_of_links == 9
 
 
 def assert_equal_pairs(actual, desired):
@@ -199,12 +199,12 @@ def test_get_all_pairs():
         ],
     )
 
+
 def test_contains():
-    ch = ClusterHelper({0:{"a1", "1","b1","b3"}, 1:{"a2", "2"}, 2:{"a3", "3"}})
+    ch = ClusterHelper({0: {"a1", "1", "b1", "b3"}, 1: {"a2", "2"}, 2: {"a3", "3"}})
     assert "1" in ch
     assert "5" not in ch
     assert 5 not in ch
     assert 0 in ch
-    assert ("a1","1") in ch
-    assert {"a1","1","b1","b3"} in ch
-
+    assert ("a1", "1") in ch
+    assert {"a1", "1", "b1", "b3"} in ch

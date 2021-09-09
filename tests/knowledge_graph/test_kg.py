@@ -39,6 +39,9 @@ def test_basic(simple_kg_entites_rel_123):
     kg2 = KG(entities=entities, rel=rel, name="kg1")
     assert kg == kg2
 
+    # no relations
+    assert len(KG({"1": {}, "2": {}})) == 2
+
 
 def test_eq(simple_kg_entites_rel_123, kg_first_second_third):
     entities, rel = simple_kg_entites_rel_123
@@ -75,6 +78,9 @@ def test_subgraph():
         entities={"e1": {"a": 1}, "e3": {}}, rel={"e1": {"e3": "rel"}}, name="kg"
     )
 
+    # no relations
+    assert KG({"1": {}, "2": {}}).subgraph(["1"]) == KG({"1": {}})
+
 
 def test_sample():
     entities = {
@@ -100,6 +106,9 @@ def test_sample():
             "e2": {"a1": "second ent"},
         }
         assert two.rel == {"e1": {"e2": "somerelation"}}
+
+    # no relations
+    assert len(KG({"1": {}, "2": {}}).sample(1)) == 1
 
 
 def test_neighbors(simple_kg_entites_rel_123):
@@ -428,6 +437,9 @@ def test_relation_names(simple_kg_entites_rel_123):
     rel2["e1"] = {"e3": {"innerrel": {"a1": 1}}, "e4": "somerel"}
     kg2 = KG(entities=entities, rel=rel2)
     assert {"innerrel", "somerel"} == kg2.relation_names
+
+    # no relations
+    assert KG({"1": {}, "2": {}}).relation_names == set()
 
 
 def test_multiple_adding_removing_example(simple_kg_entites_rel_123):
