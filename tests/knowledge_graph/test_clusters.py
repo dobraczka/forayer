@@ -198,3 +198,13 @@ def test_get_all_pairs():
             ("b1", "b3"),
         ],
     )
+
+def test_contains():
+    ch = ClusterHelper({0:{"a1", "1","b1","b3"}, 1:{"a2", "2"}, 2:{"a3", "3"}})
+    assert "1" in ch
+    assert "5" not in ch
+    assert 5 not in ch
+    assert 0 in ch
+    assert ("a1","1") in ch
+    assert {"a1","1","b1","b3"} in ch
+

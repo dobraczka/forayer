@@ -26,26 +26,49 @@ class ClusterHelper:
     --------
     >>> from forayer.knowledge_graph import ClusterHelper
     >>> ch = ClusterHelper([{"a1", "b1"}, {"a2", "b2"}])
-    >>> ch
+    >>> print(ch)
     {0: {'a1', 'b1'}, 1: {'a2', 'b2'}}
 
     Add an element to a cluster
 
     >>> ch.add((0, "c1"))
-    >>> ch
+    >>> print(ch)
     {0: {'a1', 'b1', 'c1'}, 1: {'a2', 'b2'}}
 
     Add a new cluster
 
     >>> ch.add({"e2", "f1", "c3"})
-    >>> ch
+    >>> print(ch)
     {0: {'a1', 'b1', 'c1'}, 1: {'a2', 'b2'}, 2: {'f1', 'e2', 'c3'}}
 
     Remove an element from a cluster
 
     >>> ch.remove("b1")
-    >>> ch
+    >>> print(ch)
     {0: {'a1', 'c1'}, 1: {'a2', 'b2'}, 2: {'f1', 'e2', 'c3'}}
+
+    The __contains__ function is smartly overloaded. You can
+    check if an entity is in the ClusterHelper
+
+    >>> "a1" in ch
+    True
+
+    If a cluster_id is contained
+
+    >>> 0 in ch
+    True
+
+    If a cluster is present
+
+    >>> {"c1","a1"} in ch
+    True
+
+    And even if a link exists or not
+
+    >>> ("f1","e2") in ch
+    True
+    >>> ("a1","e2") in ch
+    False
 
 
     Notes
@@ -284,6 +307,17 @@ class ClusterHelper:
             return key in self.elements
         elif isinstance(key, int):
             return key in self.clusters
+        elif isinstance(key, Set):
+            return key in self.clusters.values()
+        elif (
+            isinstance(key, Tuple)
+            and len(key) == 2
+            and isinstance(key[0], str)
+            and isinstance(key[1], str)
+            and key[0] in self.elements
+            and key[1] in self.elements
+        ):
+            return self.elements[key[0]] == self.elements[key[1]]
         return False
 
     def __setitem__(self, key, value):
