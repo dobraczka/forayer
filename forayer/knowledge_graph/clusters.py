@@ -1,6 +1,10 @@
 import random
-from typing import Dict, List, Set, Tuple, Union
+from itertools import chain, combinations
+from typing import Dict, Iterable, List, Set, Tuple, Union
 
+from forayer.knowledge_graph.graph_based_clustering import (
+    connected_components_from_container,
+)
 from forayer.utils.random_help import random_generator
 
 
@@ -73,7 +77,17 @@ class ClusterHelper:
             )
         return e_id
 
+    def _contains_overlaps(self, data):
+        if len(data) > 1 and len(list(chain(*data))) > len(set.union(*data)):
+            return True
+        return False
+
     def _from_set_list(self, data: List[Set[Union[str, int]]]):
+        # check if contains overlaps
+        if self._contains_overlaps(data):
+            # merge overlapping
+            data = connected_components_from_container(data)
+
         for cluster_id, inner in enumerate(data):
             if not isinstance(inner, set):
                 raise TypeError(
@@ -90,6 +104,8 @@ class ClusterHelper:
     def _from_dict(self, data: Dict[str, str]):
         for cluster_id, dict_items in enumerate(data.items()):
             left, right = dict_items
+            if left == right:
+                raise ValueError(f"No selflinks allowed: {left} -> {right}")
             self._check_entity_id_type(left)
             if not isinstance(right, str):
                 raise TypeError(
@@ -101,6 +117,11 @@ class ClusterHelper:
             self.clusters[cluster_id].add(right)
 
     def _from_clusters(self, data: Dict[int, Set[str]]):
+        if self._contains_overlaps(data.values()):
+            raise ValueError(
+                "Entries with multiple memberships are not allowed, when specifying"
+                " clusters and ids explicitly"
+            )
         self.elements = {
             self._check_entity_id_type(e_id): int(cluster_id)
             for cluster_id, cluster in data.items()
@@ -118,12 +139,18 @@ class ClusterHelper:
         ----------
         data : Union[List[Set[str]], Dict[str, str], Dict[int,Set[str]]]
             Clusters either as list of sets, or dict with
-            links as key, value pairs
+            links as key, value pairs, or dict with cluster id and set of members
 
         Raises
         ------
         TypeError
             if data is not dict or list
+        ValueError
+            For dict[cluster_id,member_set] if overlaps between clusters
+
+        Notes
+        -----
+        Will try to merge clusters transitively if necessary.
         """
         self.elements = {}
         self.clusters = {}
@@ -182,6 +209,28 @@ class ClusterHelper:
         if not always_return_set and len(other_members) == 1:
             return next(iter(other_members))
         return other_members
+
+    def all_pairs(self, key: Union[str, int] = None) -> Iterable[Tuple[str, str]]:
+        """Get all entity pairs of a specific cluster or of all clusters.
+
+        Parameters
+        ----------
+        key : Union[str, int]
+            Entity id or cluster id.
+            If None, provides pairs of all clusters.
+
+        Returns
+        -------
+        Generator[Tuple[str, str]]
+            Generator that produces the wanted pairs.
+        """
+        if key is not None:
+            if isinstance(key, int):
+                return combinations(self.clusters[key], 2)
+            elif isinstance(key, str):
+                return combinations(self.clusters[self.elements[key]], 2)
+        # get pair combinations of clusters and chain generators
+        return chain(*[combinations(cluster, 2) for cluster in self.clusters.values()])
 
     def members(self, key: str) -> Set[str]:
         """Get members of a cluster.
@@ -358,3 +407,13 @@ class ClusterHelper:
 
     def __len__(self):
         return len(self.clusters)
+
+    @property
+    def number_of_links(self):
+        """Return the total number of links."""
+
+        def number_of_pairs_in_set(s):
+            n = len(s)
+            return int(n * (n - 1) / 2)
+
+        return sum(map(number_of_pairs_in_set, self.clusters.values()))

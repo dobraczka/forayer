@@ -21,6 +21,34 @@ def test_clusters_init():
     with pytest.raises(TypeError):
         ClusterHelper([{"a1", 1}])
 
+    # overlapping sets
+    ch_sets = ClusterHelper(
+        [
+            {"1", "b3", "a1"},
+            {"1", "b1"},
+            {"b3", "a1", "b1"},
+            {"a1", "b1"},
+            {"c1", "e1"},
+            {"c1", "d1"},
+            {"e1", "d1"},
+            {"a2", "2"},
+        ]
+    )
+    expected_clusters = {
+        frozenset({"a1", "1", "b1", "b3"}),
+        frozenset({"a2", "2"}),
+        frozenset({"c1", "d1", "e1"}),
+    }
+    assert {frozenset(c) for c in ch_sets.clusters.values()} == expected_clusters
+
+    # assert no selflinks
+    with pytest.raises(ValueError):
+        ClusterHelper({"1": "1"})
+
+    # assert no multiple cluster memberships with cluster init
+    with pytest.raises(ValueError):
+        ClusterHelper({0: {"1", "2"}, 1: {"1", "3"}})
+
 
 def test_cluster_links():
     clusters = ClusterHelper([{"a1", "1"}, {"a2", "2"}, {"a3", "3"}])
@@ -95,3 +123,78 @@ def test_sample():
     assert len(samp) == 1
     assert c_id in clusters
     assert samp[c_id] == clusters[c_id]
+
+
+def test_number_of_links():
+    clusters = {0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
+    ch = ClusterHelper(clusters)
+    ch.number_of_links == 3
+    ch.add({"a4", "4"})
+    ch.number_of_links == 4
+    ch.add((0, "a5"))
+    ch.add((0, "a6"))
+    ch.number_of_links == 9
+
+
+def assert_equal_pairs(actual, desired):
+    actual = list(actual)
+    assert len(actual) == len(desired)
+    actual_set = {frozenset(p) for p in actual}
+    desired_set = {frozenset(p) for p in desired}
+    assert actual_set == desired_set
+
+
+def test_get_all_pairs():
+    clusters = {0: {"a1", "1"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
+    ch = ClusterHelper(clusters)
+    all_pairs = ch.all_pairs()
+    assert_equal_pairs(all_pairs, [("a1", "1"), ("a2", "2"), ("a3", "3")])
+
+    all_pairs = ch.all_pairs(0)
+    assert_equal_pairs(all_pairs, [("a1", "1")])
+
+    all_pairs = ch.all_pairs("a1")
+    assert_equal_pairs(all_pairs, [("a1", "1")])
+
+    clusters = {0: {"a1", "1", "b1", "b3"}, 1: {"a2", "2"}, 2: {"a3", "3"}}
+    ch = ClusterHelper(clusters)
+    all_pairs = ch.all_pairs()
+    assert_equal_pairs(
+        all_pairs,
+        [
+            ("a1", "1"),
+            ("a1", "b1"),
+            ("a1", "b3"),
+            ("1", "b1"),
+            ("1", "b3"),
+            ("b1", "b3"),
+            ("a2", "2"),
+            ("a3", "3"),
+        ],
+    )
+
+    all_pairs = ch.all_pairs(0)
+    assert_equal_pairs(
+        all_pairs,
+        [
+            ("a1", "1"),
+            ("a1", "b1"),
+            ("a1", "b3"),
+            ("1", "b1"),
+            ("1", "b3"),
+            ("b1", "b3"),
+        ],
+    )
+
+    all_pairs = ch.all_pairs("a1")
+    assert_equal_pairs(
+        all_pairs,
+        [
+            ("a1", "1"),
+            ("a1", "b1"),
+            ("a1", "b3"),
+            ("1", "b1"),
+            ("1", "b3"),
+            ("b1", "b3"),
+        ],
+    )

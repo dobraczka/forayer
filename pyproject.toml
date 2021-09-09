@@ -29,6 +29,7 @@ numpydoc = "^1.1.0"
 rdflib = "^6.0.0"
 scikit-learn = "^0.24.2"
 joblib = "^1.0.1"
+networkx = "^2.6.2"
 
 
 [tool.poetry.dev-dependencies]
