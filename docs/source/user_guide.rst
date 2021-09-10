@@ -130,6 +130,10 @@ You can also add and remove entities as well as relations:
 
 Entity Resolution
 =================
+
+Load benchmarks
+---------------
+
 Forayer comes with some datasets, that can be easily loaded (for an overview see :ref:`here<datasets_ref>`)
 
 .. code-block:: python
@@ -157,23 +161,6 @@ You can access the knowledge graphs by their names:
 .. code-block:: python
 
   >>> dbpedia = ds.er_task.kgs["DBpedia"]
-
-The `ClusterHelper` contains the known matches. You can find to which cluster an entity belongs, and what entities belong to what cluster:
-
-.. code-block:: python
-
-  >>> clusters = ds.er_task.clusters
-  >>> clusters['http://www.wikidata.org/entity/Q2060044']
-  11984
-  >>> clusters[11984]
-  {'http://www.wikidata.org/entity/Q2060044', 'http://dbpedia.org/resource/E083028'}
-
-To make things easier you can also directly find linked entities.
-
-.. code-block:: python
-
-  >>> clusters.links('http://www.wikidata.org/entity/Q2060044')
-  'http://dbpedia.org/resource/E083028'
 
 For prototyping it is usually beneficial to work with part of a dataset. You can therefore sample the ERTask.
 
@@ -206,6 +193,68 @@ This takes 10 matched entities. If you want non-matches in your sample as well t
 
 For all sampling methods in forayer it is possible to provide a seed for reproducibility.
 
+.. code-block:: python
+
+    >>> c_sample = ds.er_task.clusters.sample(20,seed=10)
+
+ClusterHelper
+-------------
+
+The `ClusterHelper` contains the known matches. You can find the cluster to which an entity belongs, and what entities belong to what cluster:
+
+.. code-block:: python
+
+  >>> clusters = ds.er_task.clusters
+  >>> clusters['http://www.wikidata.org/entity/Q2060044']
+  11984
+  >>> clusters[11984]
+  {'http://www.wikidata.org/entity/Q2060044', 'http://dbpedia.org/resource/E083028'}
+
+To make things easier you can also directly find linked entities.
+
+.. code-block:: python
+
+  >>> clusters.links('http://www.wikidata.org/entity/Q2060044')
+  'http://dbpedia.org/resource/E083028'
+
+To look at some more convenient functions, lets create an example ClusterHelper object with some bigger clusters:
+
+.. code-block:: python
+
+    >>> from foryer.knowledge_graph import ClusterHelper
+    >>> ch = ClusterHelper([{"a1", "1", "b1"}, {"a2", "2"}, {"a3", "3"}])
+
+You can get inner-cluster links as pairs with :meth:`~forayer.knowledge_graph.ClusterHelper.all_pairs` (the function returns a generator):
+
+.. code-block:: python
+
+    >>> list(ch.all_pairs("a1"))
+    [('1', 'b1'), ('1', 'a1'), ('b1', 'a1')]
+
+When you don't want the links of a specific entity you can also get all links if you do not provide an argument:
+
+.. code-block:: python
+
+    >>> list(ch.all_pairs())
+    [('1', 'b1'), ('1', 'a1'), ('b1', 'a1'), ('2', 'a2'), ('3', 'a3')]
+
+The `__contains__` function is smartly overloaded to let you do a lot of nice things:
+
+.. code-block:: python
+
+    # check if an entity is contained
+    >>> "a1" in ch
+    True
+    # check if a cluster id is assigned
+    >>> 0 in ch
+    True
+    # check if a cluster is contained
+    >>> {"a2","2"} in ch
+    True
+    # use tuples to check if a link is contained
+    >>> ("1","b1") in ch
+    True
+
 Loading and writing data
 ========================
 Forayer enables you to load data from different dataformats.
@@ -231,7 +280,7 @@ Writing is similarly easy:
 
 Gradoop CSV Datasource
 ----------------------
-You can load and write data from the `Gradoop format<https://github.com/dbs-leipzig/gradoop/wiki/Gradoop-DataSources#CSVDataSource>`:
+You can load and write data from the `Gradoop format <https://github.com/dbs-leipzig/gradoop/wiki/Gradoop-DataSources#CSVDataSource>`_:
 
 .. code-block:: python
 
@@ -253,6 +302,35 @@ For writing you have to provide all vertices with a special attribute "_label" o
     >>> write_to_csv_datasource(kgs, out_path)
 
 For more information on in- and outputs see the :ref:`API reference <io_ref>` for the input_output module.
+
+Create your own ERTask
+======================
+If you have your own knowledge graphs and gold standard cluster/links you can create your own ERTask. Let's look at a small toy example:
+
+.. code-block:: python
+
+    >>> from forayer.knowledge_graph import KG, ERTask, ClusterHelper
+    >>> entities_1 = {
+            "kg_1_e1": {"a1": "first entity", "a2": 123},
+            "kg_1_e2": {"a1": "second ent"},
+            "kg_1_e3": {"a2": 124},
+        }
+    >>> rel_1 = {"kg_1_e1": {"kg_1_e3": "somerelation"}}
+    >>> kg1 = KG(entities_1, rel_1, name="kg1")
+    >>> entities_2 = {
+            "kg_2_e1": {"a5": "first entity", "a2": 123},
+            "kg_2_e2": {"a6": "other second ent"},
+            "kg_2_e3": {"a7": 123},
+        }
+    >>> rel_2 = {"kg_2_e1": {"kg_2_e3": "someotherrelation"}}
+    >>> kg2 = KG(entities_2, rel_2, name="kg2")
+    >>> clusters = ClusterHelper([{"kg_1_e1", "kg_2_e1"}, {"kg_1_e2", "kg_2_e2"}, {"kg_1_e3", "kg_2_e3"}])
+    >>> ert = ERTask([kg1, kg2],clusters)
+    >>> ert
+    ERTask({kg1: (# entities: 3, # entities_with_rel: 2, # rel: 1, # entities_with_attributes: 3, # attributes: 3, # attr_values: 4),
+    kg2: (# entities: 3, # entities_with_rel: 2, # rel: 1, # entities_with_attributes: 3, # attributes: 3, # attr_values: 3)},
+    ClusterHelper(# elements:6, # clusters:3))
+
 
 Interactive Exploration
 =======================
