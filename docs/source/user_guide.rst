@@ -15,7 +15,7 @@ The knowledge graph class in forayer has two central attributes: `entities` and 
 .. code-block:: python
 
   >>> from forayer.knowledge_graph import KG
-  >>> entities = { "e1": {"a1": "first entity", "a2": 123}, "e2": {"a1": "second ent"}, "e3": {"a2": 124}, }
+  >>> entities = {"e1": {"a1": "first entity", "a2": 123}, "e2": {"a1": "second ent"}, "e3": {"a2": 124}}
   >>> relations = {"e1": {"e3": "somerelation"}}
   >>> kg = KG(entities=entities, rel=relations, name="mykg")
   >>> kg
@@ -205,9 +205,13 @@ The `ClusterHelper` contains the known matches. You can find the cluster to whic
 .. code-block:: python
 
   >>> clusters = ds.er_task.clusters
-  >>> clusters['http://www.wikidata.org/entity/Q2060044']
+  >>> clusters.elements('http://www.wikidata.org/entity/Q2060044')
   11984
+  # get members of cluster either via bracket operator
   >>> clusters[11984]
+  {'http://www.wikidata.org/entity/Q2060044', 'http://dbpedia.org/resource/E083028'}
+  # or with the members method 
+  >>> clusters.members(11984)
   {'http://www.wikidata.org/entity/Q2060044', 'http://dbpedia.org/resource/E083028'}
 
 To make things easier you can also directly find linked entities.
@@ -254,6 +258,33 @@ The `__contains__` function is smartly overloaded to let you do a lot of nice th
     # use tuples to check if a link is contained
     >>> ("1","b1") in ch
     True
+
+You can add and remove clusters and links:
+
+.. code-block:: python
+
+    # Notice that adding a link into an existing cluster
+    # links this entity to all other clusters as well
+    # through transitivity
+    >>> ch.add_link("a1","c1")
+    >>> print(ch)
+    {0: {'1', 'a1', 'b1', 'c1'}, 1: {'2', 'a2'}, 2: {'a3', '3'}}
+    >>> ch.remove("c1")
+    >>> print(ch)
+    {0: {'1', 'a1', 'b1'}, 1: {'2', 'a2'}, 2: {'a3', '3'}}
+    # You can also add via cluster id
+    >>> ch.add_to_cluster(0,"c1")
+    >>> print(ch)
+    {0: {'1', 'a1', 'b1', 'c1'}, 1: {'2', 'a2'}, 2: {'a3', '3'}}
+    # You can remove entire clusters
+    >>> ch.remove_cluster(1)
+    >>> print(ch)
+    {0: {'1', 'a1', 'b1', 'c1'}, 2: {'a3', '3'}}
+    # Adding entire clusters is possible as well
+    >>> ch.add({"e1","f1"})
+    >>> print(ch)
+    {0: {'1', 'a1', 'b1', 'c1'}, 2: {'a3', '3'}, 3: {'f1', 'e1'}}
+
 
 Loading and writing data
 ========================

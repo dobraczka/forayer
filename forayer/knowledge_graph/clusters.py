@@ -33,7 +33,7 @@ class ClusterHelper:
 
     Add an element to a cluster
 
-    >>> ch.add((0, "c1"))
+    >>> ch.add_to_cluster(0, "c1")
     >>> print(ch)
     {0: {'a1', 'b1', 'c1'}, 1: {'a2', 'b2'}}
 
@@ -66,6 +66,22 @@ class ClusterHelper:
     True
     >>> ("a1","e2") in ch
     False
+
+    To know the cluster id of an entity you can look it up with
+
+    >>> ch.elements["a1"]
+    0
+
+    To get members of a cluster either use
+
+    >>> ch.members(0)
+    {'a1', 'b1', 'c1'}
+
+    or simply
+
+    >>> ch[0]
+    {'a1', 'b1', 'c1'}
+
     """
 
     def _contains_overlaps(self, data):

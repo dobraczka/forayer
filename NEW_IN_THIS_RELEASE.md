@@ -1,1 +1,2 @@
 - Generalized ClusterHelper to allow more types for entity (and cluster) ids
+- Added more method for manipulation of ClusterHelper
