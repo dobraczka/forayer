@@ -1,6 +1,8 @@
+"""Methods to deal with entity clusters."""
+
 import random
 from itertools import chain, combinations
-from typing import Dict, Iterable, List, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Set, Tuple, Union
 
 from forayer.knowledge_graph.graph_based_clustering import (
     connected_components_from_container,
@@ -53,11 +55,6 @@ class ClusterHelper:
     >>> "a1" in ch
     True
 
-    If a cluster_id is contained
-
-    >>> 0 in ch
-    True
-
     If a cluster is present
 
     >>> {"c1","a1"} in ch
@@ -69,43 +66,14 @@ class ClusterHelper:
     True
     >>> ("a1","e2") in ch
     False
-
-
-    Notes
-    -----
-    Only str are allowed for entity identifiers
     """
-
-    def _check_entity_id_type(self, e_id):
-        """Check if entity id is str.
-
-        Parameters
-        ----------
-        e_id
-           entity id to check
-
-        Returns
-        -------
-        e_id
-            If e_id is str
-
-        Raises
-        ------
-        TypeError
-            If e_id is not str
-        """
-        if not isinstance(e_id, str):
-            raise TypeError(
-                f"Only str is allowed as element identifier, but got {type(e_id)}"
-            )
-        return e_id
 
     def _contains_overlaps(self, data):
         if len(data) > 1 and len(list(chain(*data))) > len(set.union(*data)):
             return True
         return False
 
-    def _from_set_list(self, data: List[Set[Union[str, int]]]):
+    def _from_set_list(self, data: List[Set]):
         # check if contains overlaps
         if self._contains_overlaps(data):
             # merge overlapping
@@ -118,49 +86,41 @@ class ClusterHelper:
                 )
             inner_set = set()
             for inner_element in inner:
-                self._check_entity_id_type(inner_element)
                 inner_element = inner_element
                 self.elements[inner_element] = cluster_id
                 inner_set.add(inner_element)
             self.clusters[cluster_id] = inner_set
 
-    def _from_dict(self, data: Dict[str, str]):
+    def _from_dict(self, data: Dict):
         for cluster_id, dict_items in enumerate(data.items()):
             left, right = dict_items
             if left == right:
                 raise ValueError(f"No selflinks allowed: {left} -> {right}")
-            self._check_entity_id_type(left)
-            if not isinstance(right, str):
-                raise TypeError(
-                    f"Only str is allowed as dict value, but got {type(left)}"
-                )
             self.elements[left] = cluster_id
             self.clusters[cluster_id] = {left}
             self.elements[right] = cluster_id
             self.clusters[cluster_id].add(right)
 
-    def _from_clusters(self, data: Dict[int, Set[str]]):
+    def _from_clusters(self, data: Dict):
         if self._contains_overlaps(data.values()):
             raise ValueError(
                 "Entries with multiple memberships are not allowed, when specifying"
                 " clusters and ids explicitly"
             )
         self.elements = {
-            self._check_entity_id_type(e_id): int(cluster_id)
-            for cluster_id, cluster in data.items()
-            for e_id in cluster
+            e_id: cluster_id for cluster_id, cluster in data.items() for e_id in cluster
         }
         self.clusters = data
 
     def __init__(
         self,
-        data: Union[List[Set[str]], Dict[str, str], Dict[int, Set[str]]] = None,
+        data: Union[List[Set], Dict] = None,
     ):
         """Initialize a ClusterHelper object with clusters.
 
         Parameters
         ----------
-        data : Union[List[Set[str]], Dict[str, str], Dict[int,Set[str]]]
+        data : Union[List[Set], Dict]
             Clusters either as list of sets, or dict with
             links as key, value pairs, or dict with cluster id and set of members
 
@@ -233,69 +193,71 @@ class ClusterHelper:
             return next(iter(other_members))
         return other_members
 
-    def all_pairs(self, key: Union[str, int] = None) -> Iterable[Tuple[str, str]]:
+    def all_pairs(self, key=None) -> Iterable[Tuple[Any, Any]]:
         """Get all entity pairs of a specific cluster or of all clusters.
 
         Parameters
         ----------
-        key : Union[str, int]
-            Entity id or cluster id.
-            If None, provides pairs of all clusters.
+        key
+            Cluster id.  If None, provides pairs of all clusters.
 
         Returns
         -------
-        Generator[Tuple[str, str]]
+        Generator[Tuple[Any, Any]]
             Generator that produces the wanted pairs.
         """
         if key is not None:
-            if isinstance(key, int):
-                return combinations(self.clusters[key], 2)
-            elif isinstance(key, str):
-                return combinations(self.clusters[self.elements[key]], 2)
+            return combinations(self.clusters[key], 2)
         # get pair combinations of clusters and chain generators
         return chain(*[combinations(cluster, 2) for cluster in self.clusters.values()])
 
-    def members(self, key: str) -> Set[str]:
+    def members(self, key) -> Set:
         """Get members of a cluster.
 
         Parameters
         ----------
-        key : str
+        key
             cluster id
 
         Returns
         -------
-        Set[str]
+        Set
             cluster members
         """
         return self.clusters[key]
 
     def __getitem__(self, key):
-        if not isinstance(key, (str, int)):
-            raise ValueError(f"Only str or int allowed for access, but got {type(key)}")
-        elif isinstance(key, str):
-            return self.elements[key]
-        elif isinstance(key, int):
-            return self.clusters[key]
+        """Get cluster members.
 
-    def get(self, key: Union[str, int], value=None):
-        """Return entitiy's cluster id or cluster's element or default value.
+        Parameters
+        ----------
+        key
+            Cluster id
 
-        If key is str, tries to return the cluster id of the entity.
-        If key is int, tries to return the cluster with the cluster id == key.
+        Returns
+        -------
+        Set
+            Cluster members
+        """
+        return self.clusters[key]
+
+    def get(self, key, value=None):
+        """Return cluster's element or default value.
+
+        Tries to return the cluster with the cluster id == key.
         If None is found return provided value.
 
         Parameters
         ----------
-        key : Union[str,int]
-            Searched key.
+        key
+            Searched cluster id.
         value
-            Default value to return in case key is not present.
+            Default value to return in case id is not present.
 
         Returns
         -------
-        Union[int, Set[str]]
-            Entity's cluster id or cluster with provided cluster_id.
+        Set
+            Cluster with provided cluster_id.
         """
         try:
             return self[key]
@@ -303,24 +265,28 @@ class ClusterHelper:
             return value
 
     def __contains__(self, key):
-        if isinstance(key, str):
-            return key in self.elements
-        elif isinstance(key, int):
-            return key in self.clusters
-        elif isinstance(key, Set):
+        """Check if entities/links/clusters are contained.
+
+        Parameters
+        ----------
+        key
+            Either entity id, Tuple with two entities to check for a link
+            between entities, or a clusters as set of entity ids
+        """
+        if isinstance(key, Set):
             return key in self.clusters.values()
         elif (
             isinstance(key, Tuple)
             and len(key) == 2
-            and isinstance(key[0], str)
-            and isinstance(key[1], str)
             and key[0] in self.elements
             and key[1] in self.elements
         ):
             return self.elements[key[0]] == self.elements[key[1]]
-        return False
+        else:
+            return key in self.elements
 
     def __setitem__(self, key, value):
+        """Not Implemented."""
         raise TypeError(
             "'ClusterHelper' does not support item assignment use .add() or .remove()"
         )
@@ -346,57 +312,142 @@ class ClusterHelper:
             {c_id: cluster for c_id, cluster in r_gen.sample(self.clusters.items(), n)}
         )
 
-    def add(
-        self,
-        new_entry: Union[Tuple[str, str], Set[str]],
-    ):
-        """Add a new cluster or add element to cluster.
+    def merge(self, c1, c2, new_id=None):
+        """Merge two clusters.
 
         Parameters
         ----------
-        new_entry : Union[Tuple[str, str], Set[str]]
-            Either tuple of (cluster_id, new_entity_id), or a new cluster as set
+        c1
+            Id of one cluster to merge
+        c2
+            Id of other cluster to merge
+        new_id
+            New id of cluster, if None take c1
 
         Raises
         ------
-        TypeError
-            If len(tuple) > 2
-        KeyError
-            If cluster_id does not exist
         ValueError
-            If cluster id not int or entity id not str
+            If cluster id(s) do not exist
         """
-        if not isinstance(new_entry, (tuple, set)):
-            raise TypeError(f"Expected tuple or set, but got {type(new_entry)}")
-        elif isinstance(new_entry, tuple):
-            if len(new_entry) > 2:
-                raise TypeError(
-                    "Only tuple of len == 2 is allowed, but got {len(new_entry)}"
-                )
-            if new_entry[0] not in self.clusters:
-                raise KeyError(f"Cluster id {new_entry[0]} unknown, cannot add element")
-            cluster_id, new_entity = new_entry
-            if not isinstance(cluster_id, int):
-                raise TypeError(
-                    f"Only int allowed as cluster id but got {type(cluster_id)}"
-                )
-            if not isinstance(new_entity, str):
-                raise TypeError(
-                    f"Only str allowed as entity id but got {type(new_entity)}"
-                )
-            self.clusters[cluster_id].add(new_entity)
-            self.elements[new_entity] = cluster_id
+        if c1 not in self.clusters or c2 not in self.clusters:
+            raise ValueError("Can only merge on existing cluster ids")
+        cluster1 = self[c1]
+        cluster2 = self[c2]
+        if new_id:
+            del self.clusters[c1]
+            for e1 in cluster1:
+                del self.elements[e1]
+            self.add(cluster1, c_id=new_id)
+        else:
+            new_id = c1
+        del self.clusters[c2]
+        for e2 in cluster2:
+            del self.elements[e2]
+            self.add_to_cluster(new_id, e2)
+
+    def add_link(self, e1, e2):
+        """Add a new entity link.
+
+        Either adds a link to an existing entity or
+        creates a new cluster with both.
+
+        Parameters
+        ----------
+        e1
+           Id of one entity that will be linked
+        e2
+            Id of other entity that will be linked
+
+        Returns
+        ------
+        c_id
+            Id of cluster that was created, or
+            of existing cluster that was enhanced
+            Returns False if link already was present
+        """
+        if e1 not in self and e2 not in self:
+            return self.add({e1, e2})
+        elif e1 in self.elements and e2 in self.elements:
+            if (e1, e2) in self:
+                return False
+            # merging
+            cluster_id_1 = self.elements[e1]
+            cluster_id_2 = self.elements[e2]
+            return self.merge(cluster_id_1, cluster_id_2)
+        elif e1 in self.elements:
+            cluster_id = self.elements[e1]
+            new_entity = e2
+        elif e2 in self.elements:
+            cluster_id = self.elements[e2]
+            new_entity = e1
+        self.clusters[cluster_id].add(new_entity)
+        self.elements[new_entity] = cluster_id
+
+    def add_to_cluster(self, c_id, new_entity):
+        """Add an entity to a cluster.
+
+        Parameters
+        ----------
+        c_id
+            Cluster id where entity will be added
+        new_entity
+            Id of new entity
+
+        Raises
+        ------
+        KeyError
+            If cluster id unknonw
+        ValueError
+            If entity already belongs to other cluster
+        """
+        if c_id not in self.clusters:
+            raise KeyError("Cluster id {c_id} unknown")
+        if new_entity in self.elements:
+            raise ValueError(
+                "Entity id {new_entity} already belongs to {self.clusters[c_id]}"
+            )
+        self.elements[new_entity] = c_id
+        self.clusters[c_id].add(new_entity)
+
+    def add(
+        self,
+        new_entry: Set,
+        c_id=None,
+    ):
+        """Add a new cluster.
+
+        Parameters
+        ----------
+        new_entry : Set
+            New cluster as set
+
+        c_id
+           Cluster id that will be assigned.
+           If None, the next largest cluster id will be assigned
+           Assuming cluster ids are integers
+
+        Raises
+        ------
+        ValueError
+            If entity id already present in other cluster
+            Or if new cluster id cannot be inferred automatically
+            by incrementing
+        """
+        if not isinstance(new_entry, set):
+            raise TypeError(f"Expected set, but got {type(new_entry)}")
         else:
             if not len(new_entry.intersection(self.elements.keys())) == 0:
                 raise ValueError("Set contains already present entries")
             else:
-                cluster_id = max(self.clusters.keys()) + 1
+                max_cid = max(self.clusters.keys())
+                if not isinstance(max_cid, int):
+                    raise ValueError(
+                        "Cluster Id cannot be automatically incremented, please provide"
+                        " it explicitly"
+                    )
+                cluster_id = max_cid + 1
                 self.clusters[cluster_id] = set()
                 for e in new_entry:
-                    if not isinstance(e, str):
-                        raise TypeError(
-                            f"Only str allowed as entity id but got {type(e)}"
-                        )
                     self.elements[e] = cluster_id
                     self.clusters[cluster_id].add(e)
 
@@ -419,12 +470,12 @@ class ClusterHelper:
         else:
             self.clusters[cluster_id].remove(entry)
 
-    def remove_cluster(self, cluster_id: int):
+    def remove_cluster(self, cluster_id):
         """Remove an entire cluster with the given cluster id.
 
         Parameters
         ----------
-        cluster_id : int
+        cluster_id
             id of the cluster to remove
         """
         cluster_elements = self.clusters[cluster_id]

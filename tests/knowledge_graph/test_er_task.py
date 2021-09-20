@@ -56,7 +56,7 @@ def test_sample(er_task):
             if (
                 k1 in er_task.clusters
                 and k2 in er_task.clusters
-                and er_task.clusters[k1] == er_task.clusters[k2]
+                and er_task.clusters.elements[k1] == er_task.clusters.elements[k2]
             ):
                 matches += 1
     assert matches == 1
