@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "forayer"
-version = "0.3.0"
+version = "0.3.1"
 description = "First aid utilies for knowledge graph exploration with an entity centric approach"
 authors = ["Daniel Obraczka <obraczka@informatik.uni-leipzig.de>"]
 license = "MIT"
