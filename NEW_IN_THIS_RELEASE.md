@@ -1,1 +1,1 @@
-- Fix problem with error message in AttributeVectorizer with empty path 
+- Fix unnecessary download of word embeddings
