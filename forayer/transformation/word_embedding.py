@@ -84,7 +84,7 @@ class AttributeVectorizer:
             )
         self.embedding_type = embedding_type
         if vectors_path is not None and not os.path.exists(vectors_path):
-            raise ValueError(f"vectors_path: {self.vectors_path} does not exist")
+            raise ValueError(f"vectors_path: {vectors_path} does not exist")
         self.vectors_path = vectors_path
         self.default_download_dir = (
             default_download_dir

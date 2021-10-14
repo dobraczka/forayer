@@ -729,7 +729,7 @@ python-versions = ">=3.7"
 name = "numpydoc"
 version = "1.1.0"
 description = "Sphinx extension to support docstrings in Numpy format"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.5"
 
@@ -1446,7 +1446,7 @@ docs = ["sphinx", "insegel"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "80a41486e0da3b7c5dc4ca339095f4181badd80152f808dacb12bd9e332c961a"
+content-hash = "04a691a6e53c3551a5ddf33ef0ea02698cf3b749c0451701b3bd22c1319b603a"
 
 [metadata.files]
 alabaster = [
