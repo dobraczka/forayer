@@ -42,7 +42,7 @@ class AttributeVectorizer:
     def __init__(
         self,
         tokenizer: Callable = None,
-        embedding_type: str = "glove",
+        embedding_type: str = "fasttext",
         vectors_path: str = None,
         default_download_dir: str = None,
     ):
@@ -107,20 +107,25 @@ class AttributeVectorizer:
             embeddings_dir = os.path.join(
                 self.default_download_dir, self.embedding_type
             )
+            dl_url, zip_name, embedding_file = _EMBEDDING_INFO[self.embedding_type]
+            vectors_path = os.path.join(embeddings_dir, embedding_file)
+            if os.path.exists(vectors_path):
+                # embeddings were already downloaded
+                self.vectors_path = vectors_path
+                return False
+            # we have to download them
             if not os.path.exists(embeddings_dir):
                 os.makedirs(embeddings_dir)
-            dl_url, zip_name, embedding_file = _EMBEDDING_INFO[self.embedding_type]
-            logging.info(
-                f"Downloading {self.embedding_type} embeddings to {embeddings_dir}"
-            )
+            print(f"Downloading {self.embedding_type} embeddings to {embeddings_dir}")
             wget.download(dl_url, embeddings_dir)
             with ZipFile(os.path.join(embeddings_dir, zip_name), "r") as zip_obj:
                 zip_obj.extractall(embeddings_dir)
             os.remove(os.path.join(embeddings_dir, zip_name))
-            self.vectors_path = os.path.join(embeddings_dir, embedding_file)
+            self.vectors_path = vectors_path
+            return True
 
     def _load_embeddings(self):
-        logging.info("Loading word embeddings")
+        print(f"Loading word embeddings from {self.vectors_path}")
         if self.embedding_type == "fasttext":
             return load_facebook_model(self.vectors_path).wv
         try:

@@ -1,5 +1,4 @@
 """Read and write semantic web sources."""
-import logging
 from collections import defaultdict
 from typing import Callable, Set
 
@@ -45,7 +44,7 @@ def load_from_rdf(
     if multi_value is None:
         multi_value = add_multi_value
     g = Graph()
-    logging.info(f"Reading graph from {in_path}. This might take a while...")
+    print(f"Reading graph from {in_path}. This might take a while...")
     g.parse(in_path, format=format)
     entities = defaultdict(dict)
     rel = defaultdict(dict)
