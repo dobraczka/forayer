@@ -1,1 +1,2 @@
 - Fix unnecessary download of word embeddings
+- Update dependencies
