@@ -458,3 +458,12 @@ def test_multiple_adding_removing_example(simple_kg_entites_rel_123):
     }
     assert len(kg.rel) == 0
     assert len(kg._inv_rel) == 0
+
+
+def test_info_with_ints():
+    kg = KG(entities={0: {0: "a"}, 1: {0: "b"}}, rel={0: {1: 0}}, name="kg1")
+    assert (
+        kg.info()
+        == "kg1: (# entities: 2, # entities_with_rel: 2, # rel: 1, #"
+        " entities_with_attributes: 2, # attributes: 2, # attr_values: 2)"
+    )

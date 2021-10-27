@@ -497,14 +497,14 @@ class KG:
                     for rels in rel_values:
                         if isinstance(rels, dict):
                             for inner_rel_names in rels.keys():
-                                all_rels.add(left + right + str(inner_rel_names))
+                                all_rels.add(f"{left}{right}{inner_rel_names}")
                         else:
-                            all_rels.add(left + right + str(rels))
+                            all_rels.add(f"{left}{right}{rels}")
                 elif isinstance(rel_values, dict):
                     for inner_rel_names in rel_values.keys():
-                        all_rels.add(left + right + str(inner_rel_names))
+                        all_rels.add(f"{left}{right}{inner_rel_names}")
                 else:
-                    all_rels.add(left + right + str(rel_values))
+                    all_rels.add(f"{left}{right}{rel_values}")
         return all_rels
 
     def info(self) -> str:
