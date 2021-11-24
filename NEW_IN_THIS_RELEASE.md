@@ -1,2 +1,2 @@
-- Fix unnecessary download of word embeddings
-- Update dependencies
+- Update and cleanup dependencies
+- Fix bug with int relations and .info() function
