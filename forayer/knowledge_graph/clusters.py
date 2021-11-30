@@ -328,7 +328,10 @@ class ClusterHelper:
         """
         r_gen = random_generator(seed)
         return ClusterHelper(
-            {c_id: cluster for c_id, cluster in r_gen.sample(self.clusters.items(), n)}
+            {
+                c_id: cluster
+                for c_id, cluster in r_gen.sample(list(self.clusters.items()), n)
+            }
         )
 
     def merge(self, c1, c2, new_id=None):
@@ -510,6 +513,13 @@ class ClusterHelper:
         return False
 
     def clone(self) -> ClusterHelper:
+        """Create a clone of this object.
+
+        Returns
+        -------
+        clone: ClusterHelper
+            cloned ClusterHelper
+        """
         cloned = ClusterHelper()
         cloned.elements = deepcopy(self.elements)
         cloned.clusters = deepcopy(self.clusters)

@@ -387,7 +387,7 @@ class KG:
             'e2': {'a1': 'second ent'}},rel=None,name=None)
         """
         r_gen = random_generator(seed)
-        sampled_e_ids = r_gen.sample(self.entities.keys(), n)
+        sampled_e_ids = r_gen.sample(list(self.entities.keys()), n)
         return self.subgraph(sampled_e_ids)
 
     def __getitem__(self, key: Union[str, List[str]]) -> Dict[Any, Any]:
