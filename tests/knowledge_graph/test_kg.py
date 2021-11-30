@@ -467,3 +467,12 @@ def test_info_with_ints():
         == "kg1: (# entities: 2, # entities_with_rel: 2, # rel: 1, #"
         " entities_with_attributes: 2, # attributes: 2, # attr_values: 2)"
     )
+
+
+def test_clone(simple_kg_entites_rel_123):
+    entities, rel = simple_kg_entites_rel_123
+    kg = KG(entities=entities, rel=rel, name="mykg")
+    cloned = kg.clone()
+    assert cloned == kg
+    cloned.remove_entity("e3")
+    assert cloned != kg

@@ -4,6 +4,7 @@ from __future__ import annotations
 import random
 import warnings
 from collections import defaultdict
+from copy import deepcopy
 from itertools import chain
 from typing import Any, Dict, Iterable, List, Set, Union
 
@@ -66,6 +67,19 @@ class KG:
                 and self.name == other.name
             )
         return False
+
+    def clone(self) -> KG:
+        """Create a clone of this object.
+
+        Returns
+        -------
+        clone: KG
+            cloned KG
+        """
+        cloned_entities = deepcopy(self.entities)
+        cloned_rel = deepcopy(self.rel)
+        cloned_name = deepcopy(self.name)
+        return KG(entities=cloned_entities, rel=cloned_rel, name=cloned_name)
 
     def search(self, query, attr=None, exact=False):
         """Search for entities with specific attribute value.

@@ -249,3 +249,11 @@ def test_contains():
     assert 2 in ch
     assert (2, 3) in ch
     assert {2, 3} in ch
+
+
+def test_clone():
+    ch = ClusterHelper({0: {"a1", "1", "b1", "b3"}, 1: {2, 3}, 2: {"a3", "3"}})
+    cloned = ch.clone()
+    assert ch == cloned
+    cloned.remove(2)
+    assert ch != cloned

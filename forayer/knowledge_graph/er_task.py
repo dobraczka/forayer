@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from copy import deepcopy
 from functools import reduce
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Dict, List, Set, Union
@@ -26,22 +27,27 @@ class ERTask:
         known entity clusters
     """
 
-    def __init__(self, kgs: List[KG], clusters: ClusterHelper = None):
+    def __init__(
+        self, kgs: Union[Dict[str, KG], List[KG]], clusters: ClusterHelper = None
+    ):
         """Initialize an ERTask object.
 
         Parameters
         ----------
-        kgs : List[KG]
-            list of KGs that are to be integrated
+        kgs : Union[Dict[str,KG],List[KG]]
+            list or dict of KGs that are to be integrated
         clusters : ClusterHelper
             known entity clusters
         """
-        kgs_dict = {}
-        for cur_id, k in enumerate(kgs):
-            if k.name is None:
-                k.name = str(cur_id)
-            kgs_dict[k.name] = k
-        self.kgs = kgs_dict
+        if isinstance(kgs, dict):
+            self.kgs = kgs
+        else:
+            kgs_dict = {}
+            for cur_id, k in enumerate(kgs):
+                if k.name is None:
+                    k.name = str(cur_id)
+                kgs_dict[k.name] = k
+            self.kgs = kgs_dict
         self.clusters = clusters
         self.__inv_attr = None
 
@@ -51,6 +57,22 @@ class ERTask:
 
     def __getitem__(self, key):
         return self.kgs[key]
+
+    def clone(self) -> ERTask:
+        """Create a clone of this object.
+
+        Returns
+        -------
+        clone: ERTask
+            cloned ERTask
+        """
+        cloned_kgs = {}
+        for name, graph in self.kgs.items():
+            cloned_kgs[name] = graph.clone()
+        cloned_clusters = None
+        if self.clusters:
+            cloned_clusters = self.clusters.clone()
+        return ERTask(kgs=cloned_kgs, clusters=cloned_clusters)
 
     def sample(
         self, n: int, seed: Union[int, random.Random] = None, unmatched: int = None
@@ -88,8 +110,15 @@ class ERTask:
 
         >>> ds.er_task.sample(n=10,seed=13,unmatched=20)
         ERTask({DBpedia: (# entities: 26, # entities_with_rel: 0, # rel: 0, # entities_with_attributes: 26, # attributes: 26, # attr_values: 93),Wikidata: (# entities: 14, # entities_with_rel: 0, # rel: 0, # entities_with_attributes: 14, # attributes: 14, # attr_values: 179)},ClusterHelper(# elements:20, # clusters:10))
+
+        Raises
+        ------
+        ValueError
+            if self.clusters is None
         """
         r_gen = random_generator(seed)
+        if self.clusters is None:
+            raise ValueError("Cannot perform sampling without gold standard cluster")
         sample_clusters = self.clusters.sample(n, seed=r_gen)
         entity_ids = list(sample_clusters.elements.keys())
         if unmatched is not None:
@@ -103,7 +132,7 @@ class ERTask:
                     if len(unm_ent) == unmatched:
                         break
                     if cand not in self.clusters:
-                        unmatched.add(cand)
+                        unm_ent.add(cand)
                     elif cand not in entity_ids:
                         cand_links = self.clusters.links(cand, always_return_set=True)
                         if not any(c in entity_ids or c in unm_ent for c in cand_links):

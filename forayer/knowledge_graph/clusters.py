@@ -1,6 +1,9 @@
 """Methods to deal with entity clusters."""
 
+from __future__ import annotations
+
 import random
+from copy import deepcopy
 from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Set, Tuple, Union
 
@@ -505,6 +508,12 @@ class ClusterHelper:
                 self.elements == other.elements
             )
         return False
+
+    def clone(self) -> ClusterHelper:
+        cloned = ClusterHelper()
+        cloned.elements = deepcopy(self.elements)
+        cloned.clusters = deepcopy(self.clusters)
+        return cloned
 
     def __len__(self):
         return len(self.clusters)

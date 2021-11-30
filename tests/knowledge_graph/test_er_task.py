@@ -108,3 +108,11 @@ def test_without_match(er_task):
     assert er_task.without_match() == []
     er_task["kg1"].add_entity("test", {})
     assert er_task.without_match() == ["test"]
+
+
+def test_clone(er_task):
+    cloned = er_task.clone()
+    assert cloned == er_task.clone()
+    cloned.clusters.remove("kg_1_e1")
+    cloned["kg1"].remove_entity("kg_1_e1")
+    assert cloned != er_task
