@@ -1,2 +1,1 @@
-- Update and cleanup dependencies
-- Fix bug with int relations and .info() function
+- Fixed bug with multi-value triples 

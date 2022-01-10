@@ -20,18 +20,18 @@ class KG:
 
     def __init__(
         self,
-        entities: Dict[str, Dict[Any, Any]],
-        rel: Dict[str, Dict[str, Any]] = None,
+        entities: Dict[Any, Dict[Any, Any]],
+        rel: Dict[Any, Dict[Any, Any]] = None,
         name: str = None,
     ):
         """Initialize a KG object.
 
         Parameters
         ----------
-        entities : Dict[str, Dict[Any, Any]]
+        entities : Dict[Any, Dict[Any, Any]]
             entity information with entity ids as keys and a attribute dictionaries as values
             attribute dictionaries have attribute id as key and attribute value as dict value
-        rel : Dict[str, Dict[str, Any]]
+        rel : Dict[Any, Dict[Any, Any]]
             relation triples with one entity as key, value is dict with other entity as key
             and relation id as value
         name : str, optional
@@ -49,7 +49,7 @@ class KG:
         """
         self.entities = entities
         self.rel = rel if rel is not None else {}
-        inv_rel = {}
+        inv_rel: Dict[Any, Set] = {}
         if rel is not None:
             for left_ent, right_ent_rel in rel.items():
                 for right_ent, _ in right_ent_rel.items():
@@ -203,6 +203,7 @@ class KG:
                     if right_ent_id in wanted:
                         entities_in_rel.add(ent_id)
                         entities_in_rel.add(right_ent_id)
+                        # TODO what about multi-value
                         wanted_rel[ent_id][right_ent_id] = rel_dict
         # add entities without attributes, that only show up in relationships
         # that point outside the subgraph and therefore were missed
@@ -426,20 +427,20 @@ class KG:
         return f"KG(entities={self.entities}, rel={self.rel}, name={self.name})"
 
     def neighbors(
-        self, entity_id: str, only_id: bool = False
-    ) -> Union[Set[str], Dict[Any, Dict[Any, Any]]]:
+        self, entity_id: Any, only_id: bool = False
+    ) -> Union[Set[Any], Dict[Any, Dict[Any, Any]]]:
         """Get neighbors of an entity.
 
         Parameters
         ----------
-        entity_id: str
+        entity_id: Any
             The id of entity of which we want the neighbors.
         only_id: bool
             If true only ids are returned
 
         Returns
         -------
-        neighbors: Union[Set[str], Dict[Any, Dict[Any,Any]]]
+        neighbors: Union[Set[Any], Dict[Any, Dict[Any,Any]]]
             entity dict of neighbors, if only_id is true returns neighbor ids as set
         """
         try:
@@ -456,7 +457,7 @@ class KG:
         return self[list(result_ids)]
 
     @property
-    def entity_ids(self) -> Set[str]:
+    def entity_ids(self) -> Set[Any]:
         """Return ids of all entities.
 
         Returns
@@ -471,7 +472,7 @@ class KG:
         )
 
     @property
-    def attribute_names(self) -> Set[str]:
+    def attribute_names(self) -> Set[Any]:
         """Return all attribute names.
 
         Returns
@@ -484,7 +485,7 @@ class KG:
         return set(chain(*[set(k.keys()) for k in self.entities.values()]))
 
     @property
-    def relation_names(self) -> Set[str]:
+    def relation_names(self) -> Set[Any]:
         """Return all relation names.
 
         Returns
@@ -494,13 +495,15 @@ class KG:
         """
         rel_names = set()
         for _, target_rel_dict in self.rel.items():
-            for _, rel_dict in target_rel_dict.items():
-                if isinstance(rel_dict, str):
-                    rel_names.add(rel_dict)
-                elif isinstance(rel_dict, dict):
-                    probably_name = list(rel_dict.keys())
+            for _, rel in target_rel_dict.items():
+                if isinstance(rel, str):
+                    rel_names.add(rel)
+                elif isinstance(rel, dict):
+                    probably_name = list(rel.keys())
                     if len(probably_name) == 1:
                         rel_names.add(probably_name[0])
+                elif isinstance(rel, (list, set)):
+                    rel_names.update(rel)
         return rel_names
 
     def _rel_signatures(self):

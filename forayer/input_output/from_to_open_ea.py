@@ -1,7 +1,7 @@
 """IO module for OpenEA data."""
 import os
 from collections import defaultdict
-from typing import Dict
+from typing import Any, Dict, List
 
 from forayer.knowledge_graph import KG, ClusterHelper, ERTask
 
@@ -12,7 +12,7 @@ def _get_cleaned_split(line: str, delimiter: str):
     return seperated
 
 
-def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, str]]:
+def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
     """Read attribute triples from csv into a dictionary.
 
     This functions returns the triples as dictionary, where entity ids are
@@ -28,19 +28,26 @@ def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, str]]:
 
     Returns
     -------
-    ent_attr_dict: Dict[str, Dict[str, str]]
+    ent_attr_dict: Dict[str, Dict[str, Any]]
         Entity and attribute dictionary
 
     """
-    ent_attr_dict = defaultdict(dict)
+    ent_attr_dict: Dict[str, Dict[str, Any]] = defaultdict(dict)
     with open(path, "r") as in_file:
         for line in in_file:
             e_id, prop, value = _get_cleaned_split(line, delimiter)
-            ent_attr_dict[e_id][prop] = value
+            if e_id in ent_attr_dict and prop in ent_attr_dict[e_id]:
+                # multi-value case
+                if isinstance(ent_attr_dict[e_id][prop], set):
+                    ent_attr_dict[e_id][prop].add(value)
+                else:
+                    ent_attr_dict[e_id][prop] = {ent_attr_dict[e_id][prop], value}
+            else:
+                ent_attr_dict[e_id][prop] = value
     return ent_attr_dict
 
 
-def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, str]]:
+def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
     """Read relation triples.
 
     This functions returns the triples as dictionary. Containing
@@ -56,15 +63,23 @@ def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, str]]:
 
     Returns
     -------
-    left_to_right: Dict[str, Dict[str, str]]
+    rel_dict: Dict[str, Dict[str, Any]]
         Dictionary containing relation triples with subjects as key
         of outer dict
     """
-    rel_dict = defaultdict(dict)
+    rel_dict: Dict[str, Dict[str, Any]] = defaultdict(dict)
     with open(path, "r") as in_file:
         for line in in_file:
             left_id, rel, right_id = _get_cleaned_split(line, delimiter)
-            rel_dict[left_id][right_id] = rel
+
+            if left_id in rel_dict and right_id in rel_dict[left_id]:
+                # multi-value case
+                if isinstance(rel_dict[left_id][right_id], set):
+                    rel_dict[left_id][right_id].add(rel)
+                else:
+                    rel_dict[left_id][right_id] = {rel_dict[left_id][right_id], rel}
+            else:
+                rel_dict[left_id][right_id] = rel
     return rel_dict
 
 

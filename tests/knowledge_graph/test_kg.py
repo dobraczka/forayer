@@ -441,6 +441,12 @@ def test_relation_names(simple_kg_entites_rel_123):
     # no relations
     assert KG({"1": {}, "2": {}}).relation_names == set()
 
+    # multi-value
+    rel3 = rel.copy()
+    rel3["e1"] = {"e3": {"innerrel", "other_rel"}, "e4": "somerel"}
+    kg3 = KG(entities=entities, rel=rel3)
+    assert {"innerrel", "somerel", "other_rel"} == kg3.relation_names
+
 
 def test_multiple_adding_removing_example(simple_kg_entites_rel_123):
     entities, rel = simple_kg_entites_rel_123
