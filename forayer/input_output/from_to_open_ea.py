@@ -1,8 +1,10 @@
 """IO module for OpenEA data."""
 import os
 from collections import defaultdict
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
+from forayer import forayer_stow
 from forayer.knowledge_graph import KG, ClusterHelper, ERTask
 
 
@@ -12,7 +14,9 @@ def _get_cleaned_split(line: str, delimiter: str):
     return seperated
 
 
-def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
+def read_attr_triples(
+    path: str, delimiter="\t", url: Optional[str] = None, encoding="utf-8"
+) -> Dict[str, Dict[str, Any]]:
     """Read attribute triples from csv into a dictionary.
 
     This functions returns the triples as dictionary, where entity ids are
@@ -21,10 +25,15 @@ def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
 
     Parameters
     ----------
-    path : str
+    path: str
         Path to the file
+        If remote: path to the file inside the archive
     delimiter: str, default = tab
         Delimiter of the csv file
+    url: Optional[str]
+        Url to remote zip archive where file is
+    encoding: str, default utf-8
+        specific encoding to use
 
     Returns
     -------
@@ -33,8 +42,14 @@ def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
 
     """
     ent_attr_dict: Dict[str, Dict[str, Any]] = defaultdict(dict)
-    with open(path, "r") as in_file:
+    if url:
+        context = forayer_stow.ensure_open_zip(url=url, inner_path=path)
+    else:
+        context = open(path, "r")  # noqa: SIM115
+    with context as in_file:
         for line in in_file:
+            if isinstance(line, bytes):
+                line = line.decode(encoding)
             e_id, prop, value = _get_cleaned_split(line, delimiter)
             if e_id in ent_attr_dict and prop in ent_attr_dict[e_id]:
                 # multi-value case
@@ -47,7 +62,9 @@ def read_attr_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
     return ent_attr_dict
 
 
-def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
+def read_rel_triples(
+    path: str, delimiter="\t", url: Optional[str] = None, encoding="utf-8"
+) -> Dict[str, Dict[str, Any]]:
     """Read relation triples.
 
     This functions returns the triples as dictionary. Containing
@@ -56,10 +73,15 @@ def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
 
     Parameters
     ----------
-    path : str
+    path: str
         Path to the file
+        If remote: path to the file inside the archive
     delimiter: str, default = tab
         Delimiter of the csv file
+    url: Optional[str]
+        Url to remote zip archive where file is
+    encoding: str, default utf-8
+        specific encoding to use
 
     Returns
     -------
@@ -68,8 +90,14 @@ def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
         of outer dict
     """
     rel_dict: Dict[str, Dict[str, Any]] = defaultdict(dict)
-    with open(path, "r") as in_file:
+    if url:
+        context = forayer_stow.ensure_open_zip(url=url, inner_path=path)
+    else:
+        context = open(path, "r")  # noqa: SIM115
+    with context as in_file:
         for line in in_file:
+            if isinstance(line, bytes):
+                line = line.decode(encoding)
             left_id, rel, right_id = _get_cleaned_split(line, delimiter)
 
             if left_id in rel_dict and right_id in rel_dict[left_id]:
@@ -83,22 +111,22 @@ def read_rel_triples(path: str, delimiter="\t") -> Dict[str, Dict[str, Any]]:
     return rel_dict
 
 
-def _read_two_column(path, delimiter="\t") -> ClusterHelper:
-    links = {}
-    with open(path, "r") as infile:
-        for line in infile:
-            left, right = _get_cleaned_split(line, delimiter)
-            links[left] = right
-    return ClusterHelper(links)
-
-
-def read_links(path: str) -> ClusterHelper:
+def read_links(
+    path: str, delimiter="\t", url: Optional[str] = None, encoding="utf-8"
+) -> ClusterHelper:
     """Read entity links.
 
     Parameters
     ----------
-    path : str
-        inpath
+    path: str
+        Path to the file
+        If remote: path to the file inside the archive
+    delimiter: str, default = tab
+        Delimiter of the csv file
+    url: Optional[str]
+        Url to remote zip archive where file is
+    encoding: str, default utf-8
+        specific encoding to use
 
     Returns
     -------
@@ -106,7 +134,18 @@ def read_links(path: str) -> ClusterHelper:
         ClusterHelper instance containing all links
 
     """
-    return _read_two_column(path)
+    if url:
+        context = forayer_stow.ensure_open_zip(url=url, inner_path=path)
+    else:
+        context = open(path, "r")  # noqa: SIM115
+    with context as in_file:
+        links = {}
+        for line in in_file:
+            if isinstance(line, bytes):
+                line = line.decode(encoding)
+            left, right = _get_cleaned_split(line, delimiter)
+            links[left] = right
+    return ClusterHelper(links)
 
 
 def _get_kg_name_from_path(path: str):
@@ -118,9 +157,13 @@ def _get_kg_name_from_path(path: str):
         return "English-DBpedia", "German-DBpedia"
     if "EN_FR" in path:
         return "English-DBpedia", "French-DBpedia"
+    raise ValueError(
+        "Unknown knowledge graph names, please specifiy explicitly in from_openea via"
+        " kg_names parameter"
+    )
 
 
-def create_kg(path: str, one_or_two: str, name: str) -> KG:
+def create_kg(path: str, one_or_two: str, name: str, url: Optional[str] = None) -> KG:
     """Create a KG object from open ea files given in path.
 
     Parameters
@@ -131,31 +174,46 @@ def create_kg(path: str, one_or_two: str, name: str) -> KG:
         which KG to create (either "1" or "2")
     name : str
         name of KG
+    url : str
+        url to remote archive if the files are remote
 
     Returns
     -------
     KG
         knowledge graph object
     """
-    attr_trip = read_attr_triples(os.path.join(path, f"attr_triples_{one_or_two}"))
-    rel_trip = read_rel_triples(os.path.join(path, f"rel_triples_{one_or_two}"))
+    attr_trip_path = os.path.join(path, f"attr_triples_{one_or_two}")
+    rel_trip_path = os.path.join(path, f"rel_triples_{one_or_two}")
+    attr_trip = read_attr_triples(path=attr_trip_path, url=url)
+    rel_trip = read_rel_triples(path=rel_trip_path, url=url)
     return KG(attr_trip, rel_trip, name)
 
 
-def from_openea(path: str) -> ERTask:
-    """Create ERTask object from open ea files.
+def from_openea(
+    path: str, kg_names: Optional[Tuple[str, str]] = None, url: Optional[str] = None
+) -> ERTask:
+    """Create ERTask object from open ea-style files.
 
     Parameters
     ----------
     path : str
         path to openea files of dataset pair
+        for remote files, the root folder in the zip
+    kg_names: Optional[Tuple[str,str]]
+        optionally set knowledge graph names explicitly
+    url: Optional[str]
+        url to remote archive if the files are remote
 
     Returns
     -------
     ERTask
         er_task object
     """
-    kg_names = _get_kg_name_from_path(path)
-    kg1 = create_kg(path, "1", kg_names[0])
-    kg2 = create_kg(path, "2", kg_names[1])
-    return ERTask(kgs=[kg1, kg2], clusters=read_links(os.path.join(path, "ent_links")))
+    if not kg_names:
+        kg_names = _get_kg_name_from_path(path)
+
+    kg1 = create_kg(path, "1", kg_names[0], url=url)
+    kg2 = create_kg(path, "2", kg_names[1], url=url)
+    link_path = os.path.join(path, "ent_links")
+    clusters = read_links(path=link_path, url=url)
+    return ERTask(kgs=[kg1, kg2], clusters=clusters)
