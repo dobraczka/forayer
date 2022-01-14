@@ -1,11 +1,13 @@
 """OAEI knowledge graph track dataset class."""
 
-import os
 from collections import namedtuple
+from typing import Dict, Optional, Tuple
 
-from forayer.datasets.base_dataset import RemoteDataset
-from forayer.input_output.from_to_rdf import load_from_rdf
+import pystow
+from forayer.datasets.base_dataset import ForayerDataset
+from forayer.input_output.from_to_rdf import from_rdflib
 from forayer.knowledge_graph import ClusterHelper, ERTask
+from pystow import ensure_rdf
 from rdflib import Graph
 from tqdm import tqdm
 
@@ -20,7 +22,7 @@ OAEITaskFiles = namedtuple(
 )
 
 
-class OAEIKGDataset(RemoteDataset):
+class OAEIKGDataset(ForayerDataset):
     """The  OAEI (Ontology Alignment Evaluation Initiative) Knowledge Graph Track tasks contain graphs created from fandom wikis.
 
     Five integration tasks are available:
@@ -32,8 +34,6 @@ class OAEIKGDataset(RemoteDataset):
 
     More information can be found at the `website <http://oaei.ontologymatching.org/2019/knowledgegraph/index.html>`_.
     """
-
-    DS_NAME = "OAEI_KG_Track"
 
     _STARWARS = URLWithFileName(
         url="http://oaei.webdatacommons.org/tdrs/testdata/persistent/knowledgegraph/v3/suite/starwars-swg/component/source/",
@@ -103,7 +103,7 @@ class OAEIKGDataset(RemoteDataset):
         ),
     }
 
-    def __init__(self, task: str, data_folder: str = None):
+    def __init__(self, task: str, force: bool = False):
         """Initialize a OAEI Knowledge Graph Track task.
 
         Parameters
@@ -111,8 +111,8 @@ class OAEIKGDataset(RemoteDataset):
         task : str
             Name of the task.
             Has to be one of {starwars-swg,starwars-swtor,marvelcinematicuniverse-marvel,memoryalpha-memorybeta, memoryalpha-stexpanded}
-        data_folder : str
-            folder where raw files are stored or will be downloaded
+        force : bool
+            if true ignores cache
         """
         if not task.lower() in self.__class__._TASKS:
             raise ValueError(
@@ -120,13 +120,11 @@ class OAEIKGDataset(RemoteDataset):
             )
         task = task.lower()
         self.task = task
-        dl_task = self.__class__._TASKS[self.task]
-        super(OAEIKGDataset, self).__init__(
-            download_urls=[dl_task.kg1, dl_task.kg2, dl_task.ref],
-            data_folder=data_folder,
+        super().__init__(
+            name=self.task,
+            cache_path=pystow.join("forayer", "cache", name=f"OAEI_KG_{task}.pkl"),
+            force=force,
         )
-        self.download()
-        self.er_task = self._load()
 
     def __repr__(self):
         return (
@@ -134,11 +132,9 @@ class OAEIKGDataset(RemoteDataset):
             + f"(task={self.task}, data_folder={self.data_folder})"
         )
 
-    def _load_entity_links(self, path: str) -> ClusterHelper:
+    def _load_entity_links(self, ref: Graph) -> ClusterHelper:
         print("Parsing ref graph")
-        ref = Graph()
-        ref.parse(path, format="xml")
-        pairs = {}
+        pairs: Dict[str, Tuple[str, str]] = {}
         for stmt in tqdm(ref, desc="Gathering links"):
             s, p, o = stmt
             if (
@@ -146,7 +142,7 @@ class OAEIKGDataset(RemoteDataset):
                 in str(p)
             ):
                 # key is BNode id, value is entity id tuple
-                tup = (None, None)
+                tup: Tuple[str, str] = ("", "")
                 if str(s) in pairs:
                     tup = pairs[str(s)]
                 if "alignmententity1" in str(p):
@@ -158,20 +154,34 @@ class OAEIKGDataset(RemoteDataset):
         return ClusterHelper(links)
 
     def _load(self) -> ERTask:
-        dl_task = self.__class__._TASKS[self.task]
+        dl_task: OAEITaskFiles = self.__class__._TASKS[self.task]
         left_name = dl_task.kg1.file_name.replace(".xml", "")
         right_name = dl_task.kg2.file_name.replace(".xml", "")
-        kg_left = load_from_rdf(
-            os.path.join(self.data_folder, dl_task.kg1.file_name),
-            format="xml",
-            kg_name=left_name,
+        kg_left_rdf = ensure_rdf(
+            "forayer",
+            "OAEI_KG",
+            self.task,
+            name=dl_task.kg1.file_name,
+            url=dl_task.kg1.url,
+            parse_kwargs={"format": "xml"},
         )
-        kg_right = load_from_rdf(
-            os.path.join(self.data_folder, dl_task.kg2.file_name),
-            format="xml",
-            kg_name=right_name,
+        kg_left = from_rdflib(kg_left_rdf, kg_name=left_name)
+        kg_right_rdf = ensure_rdf(
+            "forayer",
+            "OAEI_KG",
+            self.task,
+            name=dl_task.kg2.file_name,
+            url=dl_task.kg2.url,
+            parse_kwargs={"format": "xml"},
         )
-        ref_links = self._load_entity_links(
-            os.path.join(self.data_folder, dl_task.ref.file_name)
+        kg_right = from_rdflib(kg_right_rdf, kg_name=right_name)
+        kg_ref = ensure_rdf(
+            "forayer",
+            "OAEI_KG",
+            self.task,
+            name=dl_task.ref.file_name,
+            url=dl_task.ref.url,
+            parse_kwargs={"format": "xml"},
         )
+        ref_links = self._load_entity_links(kg_ref)
         return ERTask(kgs=[kg_left, kg_right], clusters=ref_links)

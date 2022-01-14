@@ -22,6 +22,7 @@ def test_open_ea_dataset():
         ds_pair="D_W",
         size="15K",
         version=1,
+        force=True,
     )
     # assert high-level statistics
     dbpedia = dw15kv1.er_task["DBpedia"]
