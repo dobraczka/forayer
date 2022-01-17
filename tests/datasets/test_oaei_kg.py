@@ -1,17 +1,8 @@
-import os
-import pathlib
-
 from forayer.datasets import OAEIKGDataset
 
 
 def test_open_ea_dataset():
-    test_data_folder = os.path.join(
-        pathlib.Path(__file__).parent.parent.resolve(), "test_data"
-    )
-    ds = OAEIKGDataset(
-        task="memoryalpha-memorybeta",
-        data_folder=os.path.join(test_data_folder, "OAEI_KG_Track"),
-    )
+    ds = OAEIKGDataset(task="memoryalpha-memorybeta", force=True)
 
     assert (
         ds.er_task.kgs["memoryalpha"].entities[

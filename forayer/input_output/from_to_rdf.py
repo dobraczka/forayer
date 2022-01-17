@@ -1,12 +1,59 @@
 """Read and write semantic web sources."""
 from collections import defaultdict
-from typing import Callable, Set
+from typing import Any, Callable, Dict, Set
 
 import rdflib
 from forayer.knowledge_graph import KG
 from rdflib import Graph
 from rdflib.term import Literal
 from tqdm import tqdm
+
+
+def from_rdflib(
+    graph: Graph,
+    literal_cleaning_func: Callable = None,
+    kg_name: str = None,
+    multi_value: Callable = None,
+) -> KG:
+    """Create forayer knowledge graph object from rdflib graph.
+
+    Parameters
+    ----------
+    graph : rdflib.Graph
+        Rdflib graph to transform.
+    literal_cleaning_func: Callable
+        Function to preprocess literals,
+        if None will simply cast to python types.
+    format : str
+        Triple format ("xml”, “n3” (use for turtle), “nt” or “trix”).
+    kg_name : str
+        How to name the knowledge graph object.
+    multi_value : Callable
+        How to handle multiple attribute values for an
+        entity, attribute name combination.
+        Default creates a set and adds to it
+
+    Returns
+    -------
+    KG
+        the transformed kg object
+    """
+    if literal_cleaning_func is None:
+        literal_cleaning_func = cast_to_python_type
+    if multi_value is None:
+        multi_value = add_multi_value
+    entities: Dict[str, Dict[str, Any]] = defaultdict(dict)
+    rel: Dict[str, Dict[str, Any]] = defaultdict(dict)
+    for stmt in tqdm(graph, desc="Transforming graph", total=len(graph)):
+        s, p, o = stmt
+        if isinstance(o, Literal):
+            value = literal_cleaning_func(o)
+            if str(p) in entities[str(s)]:
+                value = multi_value(entities[str(s)][str(p)], value)
+            entities[str(s)][str(p)] = value
+        else:
+            rel[str(s)][str(o)] = str(p)
+    return KG(entities=entities, rel=rel, name=kg_name)
 
 
 def load_from_rdf(
@@ -39,25 +86,15 @@ def load_from_rdf(
     KG
         the loaded kg object
     """
-    if literal_cleaning_func is None:
-        literal_cleaning_func = cast_to_python_type
-    if multi_value is None:
-        multi_value = add_multi_value
     g = Graph()
     print(f"Reading graph from {in_path}. This might take a while...")
     g.parse(in_path, format=format)
-    entities = defaultdict(dict)
-    rel = defaultdict(dict)
-    for stmt in tqdm(g, desc="Transforming graph", total=len(g)):
-        s, p, o = stmt
-        if isinstance(o, Literal):
-            value = literal_cleaning_func(o)
-            if str(p) in entities[str(s)]:
-                value = multi_value(entities[str(s)][str(p)], value)
-            entities[str(s)][str(p)] = value
-        else:
-            rel[str(s)][str(o)] = str(p)
-    return KG(entities=entities, rel=rel, name=kg_name)
+    return from_rdflib(
+        g,
+        literal_cleaning_func=literal_cleaning_func,
+        kg_name=kg_name,
+        multi_value=multi_value,
+    )
 
 
 def write_to_rdf(

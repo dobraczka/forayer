@@ -1,6 +1,10 @@
 import sys
 import warnings
 
+from pystow import module
+
+forayer_stow = module("forayer")
+
 
 def warning_formatter(msg, category, filename, lineno, line=None):
     """Format warning to only print filename, linenumber and message.
