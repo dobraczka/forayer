@@ -1,1 +1,2 @@
 - Fixed bug with multi-value triples 
+- Moved data storage to [pystow](https://github.com/cthoyt/pystow)
