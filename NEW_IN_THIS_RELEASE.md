@@ -1,2 +1,1 @@
-- Fixed bug with multi-value triples 
-- Moved data storage to [pystow](https://github.com/cthoyt/pystow)
+- Fixed security vulnerability in IPython by setting it to at least 7.31.1
