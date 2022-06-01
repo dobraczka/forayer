@@ -93,7 +93,7 @@ class AttributeVectorizer:
         )
         self._download_embeddings_if_needed()
         self.wv = self._load_embeddings()
-        self.vocab = {}
+        self.vocab: Dict = {}
         self.seen_tokens = 0
         self.ignored_tokens = 0
 

@@ -44,7 +44,6 @@ release = __version__
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "numpydoc",
     "sphinx.ext.doctest",
     # "sphinx.ext.coverage",
     "sphinx.ext.intersphinx",
@@ -52,9 +51,6 @@ extensions = [
     # "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
 ]
-
-numpydoc_validation_checks = {"all"}
-numpydoc_show_class_members = False
 
 # Napoleon settings
 napoleon_include_init_with_doc = False

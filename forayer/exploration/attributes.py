@@ -7,6 +7,7 @@ from forayer.knowledge_graph import KG, AttributeEmbeddedKG, ERTask
 from joblib import Memory
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from typing import Dict
 
 memory = Memory("./data/data_frames", mmap_mode="r+")
 
@@ -49,7 +50,7 @@ def non_nan_embeddings(
     nan_col = "nan"
     not_nan_col = "not nan"
     tmp_total_col = "total"
-    test = defaultdict(lambda: defaultdict(int))
+    test: Dict = defaultdict(lambda: defaultdict(int))
     for attr_dict in entities.values():
         for attr_name, attr_value in attr_dict.items():
             if len(attr_value) == 0:

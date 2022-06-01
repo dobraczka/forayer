@@ -195,7 +195,7 @@ class KG:
             for ent_id, attr_dict in self.entities.items()
             if ent_id in wanted
         }
-        wanted_rel = defaultdict(dict)
+        wanted_rel: Dict = defaultdict(dict)
         entities_in_rel = set()
         for ent_id, right_rel_dict in self.rel.items():
             if ent_id in wanted:
@@ -523,6 +523,16 @@ class KG:
                 else:
                     all_rels.add(f"{left}{right}{rel_values}")
         return all_rels
+
+    @property
+    def rel_triples(self):
+        for head, tail_rel in self.rel.items():
+            for tail, rel in tail_rel.items():
+                if isinstance(rel, set):
+                    for rel_inner in rel:
+                        yield head, rel_inner, tail
+                else:
+                    yield head, rel, tail
 
     def info(self) -> str:
         """Print general information about this object.

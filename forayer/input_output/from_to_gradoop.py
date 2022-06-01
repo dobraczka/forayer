@@ -72,7 +72,11 @@ def is_gradoop_id(value) -> bool:
 
 
 def _load_metadata(path: str) -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
-    metadata = {"g": defaultdict(list), "v": defaultdict(list), "e": defaultdict(list)}
+    metadata: Dict[str, Dict] = {
+        "g": defaultdict(list),
+        "v": defaultdict(list),
+        "e": defaultdict(list),
+    }
 
     with open(path, "r") as in_file:
         reader = csv.reader(in_file, delimiter=";")
@@ -269,7 +273,7 @@ def _fix_metadata_order(metadata: Dict):
     for element_type, ele_meta in metadata.items():
         v_out = {}
         for inner_type, attr_dict in ele_meta.items():
-            inner_list = [[], []]  # name, type
+            inner_list: List[List] = [[], []]  # name, type
             for a_name, a_type in attr_dict.items():
                 inner_list[0].append(a_name)
                 inner_list[1].append(a_type)
@@ -319,7 +323,7 @@ def _create_metadata(
 def _create_vertex_lines(
     kgs: Dict[str, KG], label_attr: str, vertex_metadata: Dict, vertex_id_attr_name: str
 ):
-    v_dict = {}
+    v_dict: Dict = {}
     vid_to_gid = {}
     for k_name, kg in kgs.items():
         for e_id, e_attr_dict in kg.entities.items():
@@ -356,7 +360,7 @@ def _create_vertex_lines(
 
 
 def _create_edge_lines(kgs: Dict[str, KG], edge_metadata: Dict, vid_to_gid: Dict):
-    e_dict = {}
+    e_dict: Dict = {}
     for k_name, kg in kgs.items():
         for source_id, target_rel_dict in kg.rel.items():
             for target_id, rel_dict in target_rel_dict.items():
@@ -438,7 +442,7 @@ def _create_metadata_lines(metadata):
     return m_lines
 
 
-def _kgs_dict_to_gradoop_id(kgs: Dict) -> Dict:
+def _kgs_dict_to_gradoop_id(kgs: Dict[str, KG]) -> Dict:
     return {
         int_to_gradoop_id(i): kg_name_value[1]
         for i, kg_name_value in enumerate(kgs.items())
@@ -493,6 +497,12 @@ def write_to_csv_datasource(
     vertices_csv_path = os.path.join(out_path, "vertices.csv")
     edges_csv_path = os.path.join(out_path, "edges.csv")
     metadata_csv_path = os.path.join(out_path, "metadata.csv")
+
+    if isinstance(kgs, KG):
+        name = kgs.name if kgs is not None else "0"
+        assert name is not None
+        kgs = {name: kgs}
+
     metadata = _create_metadata(
         kgs=kgs,
         label_attr=label_attr,

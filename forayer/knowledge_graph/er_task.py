@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import random
-from copy import deepcopy
 from functools import reduce
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Set, Union, Optional
 
 from forayer.utils.dict_help import dict_merge
 from forayer.utils.random_help import random_generator
@@ -49,7 +48,7 @@ class ERTask:
                 kgs_dict[k.name] = k
             self.kgs = kgs_dict
         self.clusters = clusters
-        self.__inv_attr = None
+        self.__inv_attr: Optional[Dict] = None
 
     def __repr__(self):
         kg_info = "{" + ",".join([k.info() for _, k in self.kgs.items()]) + "}"
@@ -122,8 +121,8 @@ class ERTask:
         sample_clusters = self.clusters.sample(n, seed=r_gen)
         entity_ids = list(sample_clusters.elements.keys())
         if unmatched is not None:
-            unm_ent = set()
-            no_match_entities = self.without_match()
+            unm_ent: Union[Set, List] = set()
+            no_match_entities: List = self.without_match()
             if len(no_match_entities) >= n:
                 unm_ent = r_gen.sample(no_match_entities)
             else:
@@ -132,7 +131,7 @@ class ERTask:
                     if len(unm_ent) == unmatched:
                         break
                     if cand not in self.clusters:
-                        unm_ent.add(cand)
+                        unm_ent.append(cand)
                     elif cand not in entity_ids:
                         cand_links = self.clusters.links(cand, always_return_set=True)
                         if not any(c in entity_ids or c in unm_ent for c in cand_links):
@@ -198,7 +197,7 @@ class ERTask:
             inverse attribute dict
         """
         if self.__inv_attr is None:
-            attr_to_kg_to_attr_name_to_ent = {}
+            attr_to_kg_to_attr_name_to_ent: Dict = {}
             for kg_name, kg in self.kgs.items():
                 for ent_id, ent_attr_dict in kg.entities.items():
                     for attr_name, attr_value in ent_attr_dict.items():
