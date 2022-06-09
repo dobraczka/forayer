@@ -1,1 +1,1 @@
-- Fixed security vulnerability in IPython by setting it to at least 7.31.1
+- Fixed bug in knowledge graph representation 
