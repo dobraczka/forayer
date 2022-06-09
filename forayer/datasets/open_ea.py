@@ -29,7 +29,7 @@ class OpenEADataset(ForayerDataset):
         Parameters
         ----------
         ds_pair : str
-            name of ds pair (either "D-W" or "D-Y")
+            name of ds pair (either "D_W" or "D_Y")
         size : str
             size of the task (either "15K" or "100K")
         version : int
@@ -50,8 +50,8 @@ class OpenEADataset(ForayerDataset):
     def __repr__(self):
         return (
             self.__class__.__name__
-            + f"(ds_pair={self.ds_pair}, size={self.size}, version={self.version},"
-            f" data_folder={self.data_folder}, {self.er_task})"
+            + f"(ds_pair={self.ds_pair}, size={self.size},"
+            f" version={self.version},{self.er_task})"
         )
 
     def _load(self) -> ERTask:

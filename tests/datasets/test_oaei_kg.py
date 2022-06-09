@@ -25,3 +25,5 @@ def test_open_ea_dataset():
             "http://dbkwik.webdatacommons.org/memory-beta.wikia.com/resource/Verillian"
         ]
     )
+    # make sure print is working
+    assert str(ds)

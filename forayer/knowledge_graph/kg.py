@@ -462,7 +462,7 @@ class KG:
 
         Returns
         -------
-        Set[str]
+        Set[Any]
             Ids of all entities.
         """
         return (
@@ -472,7 +472,7 @@ class KG:
         )
 
     @property
-    def attribute_names(self) -> Set[Any]:
+    def attribute_names(self) -> Set[str]:
         """Return all attribute names.
 
         Returns
@@ -483,6 +483,25 @@ class KG:
         # get list of sets of attribute dict keys
         # and flatten into one set using chain
         return set(chain(*[set(k.keys()) for k in self.entities.values()]))
+
+    @property
+    def attribute_values(self) -> Set[Any]:
+        """Return all attribute values.
+
+        Returns
+        -------
+        Set[Any]
+            Attribute values as set
+        """
+        attr_values = set()
+        for _, attr_dict in self.entities.items():
+            for _, attr_value in attr_dict.items():
+                if isinstance(attr_value, set):
+                    for inner_attr in attr_value:
+                        attr_values.add(inner_attr)
+                else:
+                    attr_values.add(attr_value)
+        return attr_values
 
     @property
     def relation_names(self) -> Set[Any]:
@@ -544,13 +563,8 @@ class KG:
         """
         num_ent = len(self.entities.keys())
         num_attr_name = len(self.entities.values())
-        num_attr_values = len(
-            {
-                attr_value
-                for _, attr_dict in self.entities.items()
-                for _, attr_value in attr_dict.items()
-            }
-        )
+
+        num_attr_values = len(self.attribute_values)
         num_ent_rel = len(set(self.rel.keys()).union(set(self._inv_rel.keys())))
         num_rel = len(self._rel_signatures())
         name = "KG" if self.name is None else self.name
