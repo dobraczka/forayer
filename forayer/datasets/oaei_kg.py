@@ -103,7 +103,7 @@ class OAEIKGDataset(ForayerDataset):
         ),
     }
 
-    def __init__(self, task: str, force: bool = False):
+    def __init__(self, task: str = "memoryalpha-memorybeta", force: bool = False):
         """Initialize a OAEI Knowledge Graph Track task.
 
         Parameters

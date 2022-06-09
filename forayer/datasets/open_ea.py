@@ -23,7 +23,13 @@ class OpenEADataset(ForayerDataset):
         "https://www.dropbox.com/s/xfehqm4pcd9yw0v/OpenEA_dataset_v2.0.zip?dl=1"
     )
 
-    def __init__(self, ds_pair: str, size: str, version: int, force: bool = False):
+    def __init__(
+        self,
+        ds_pair: str = "D_W",
+        size: str = "15K",
+        version: int = 1,
+        force: bool = False,
+    ):
         """Initialize an OpenEA dataset pair.
 
         Parameters

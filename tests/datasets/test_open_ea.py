@@ -89,4 +89,3 @@ def test_open_ea_dataset():
 
     # test print working
     assert str(dw15kv1)
-
