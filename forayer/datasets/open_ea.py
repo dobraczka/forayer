@@ -23,13 +23,19 @@ class OpenEADataset(ForayerDataset):
         "https://www.dropbox.com/s/xfehqm4pcd9yw0v/OpenEA_dataset_v2.0.zip?dl=1"
     )
 
-    def __init__(self, ds_pair: str, size: str, version: int, force: bool = False):
+    def __init__(
+        self,
+        ds_pair: str = "D_W",
+        size: str = "15K",
+        version: int = 1,
+        force: bool = False,
+    ):
         """Initialize an OpenEA dataset pair.
 
         Parameters
         ----------
         ds_pair : str
-            name of ds pair (either "D-W" or "D-Y")
+            name of ds pair (either "D_W" or "D_Y")
         size : str
             size of the task (either "15K" or "100K")
         version : int
@@ -50,8 +56,8 @@ class OpenEADataset(ForayerDataset):
     def __repr__(self):
         return (
             self.__class__.__name__
-            + f"(ds_pair={self.ds_pair}, size={self.size}, version={self.version},"
-            f" data_folder={self.data_folder}, {self.er_task})"
+            + f"(ds_pair={self.ds_pair}, size={self.size},"
+            f" version={self.version},{self.er_task})"
         )
 
     def _load(self) -> ERTask:
