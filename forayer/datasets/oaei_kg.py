@@ -1,7 +1,7 @@
 """OAEI knowledge graph track dataset class."""
 
 from collections import namedtuple
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 import pystow
 from forayer.datasets.base_dataset import ForayerDataset
@@ -103,7 +103,7 @@ class OAEIKGDataset(ForayerDataset):
         ),
     }
 
-    def __init__(self, task: str, force: bool = False):
+    def __init__(self, task: str = "memoryalpha-memorybeta", force: bool = False):
         """Initialize a OAEI Knowledge Graph Track task.
 
         Parameters
@@ -129,7 +129,7 @@ class OAEIKGDataset(ForayerDataset):
     def __repr__(self):
         return (
             self.__class__.__name__
-            + f"(task={self.task}, data_folder={self.data_folder})"
+            + f"(task={self.task})"
         )
 
     def _load_entity_links(self, ref: Graph) -> ClusterHelper:
