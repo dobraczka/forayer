@@ -1,1 +1,1 @@
-- Fixed bug in knowledge graph representation 
+- Fixed joblib vulnerability 
