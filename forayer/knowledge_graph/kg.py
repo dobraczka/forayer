@@ -8,11 +8,12 @@ from copy import deepcopy
 from itertools import chain
 from typing import Any, Dict, Iterable, List, Set, Union
 
+from rdflib import Graph, Literal, URIRef
+from tqdm import tqdm
+
 from forayer.transformation.word_embedding import AttributeVectorizer
 from forayer.utils.dict_help import dict_merge, nested_ddict2dict
 from forayer.utils.random_help import random_generator
-from rdflib import Graph, Literal, URIRef
-from tqdm import tqdm
 
 
 class KG:

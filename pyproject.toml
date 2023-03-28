@@ -6,6 +6,7 @@ authors = ["Daniel Obraczka <obraczka@informatik.uni-leipzig.de>"]
 license = "MIT"
 readme = "README.md"
 keywords = ["knowledge graph", "entity resolution"]
+classifiers = ["Development Status :: 4 - Beta", "Programming Language :: Python", "Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3 :: Only"]
 repository = "https://github.com/dobraczka/forayer"
 
 [tool.poetry.urls]
@@ -14,7 +15,7 @@ repository = "https://github.com/dobraczka/forayer"
 "Documentation" = "https://forayer.readthedocs.io"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<4.0"
 tqdm = "^4.0"
 sphinx = {version = "^4.0.2", optional = true}
 insegel = {version = "^1.1.0", optional = true}
@@ -44,7 +45,11 @@ flake8-comprehensions = "^3.10.0"
 flake8-print = "^5.0.0"
 nox-poetry = "^1.0.0"
 black = "^22.3.0"
-ipython = "^8.4.0"
+pytest-mock = "^3.7.0"
+pyroma = {git = "https://github.com/CAM-Gerlach/pyroma.git", rev = "improve-pep-517-approach"}
+pydocstyle = "^6.1.1"
+flake8-bugbear = "^22.7.1"
+unittest-templates = "^0.1.0"
 
 
 [tool.poetry.extras]
@@ -55,10 +60,9 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.flake8]
-ignore = "E203, E266, E501, W503, F403, F401, B950"
+ignore = "E203, E266, E501, W503, F403, F401, C408, D107"
 max-line-length = 88
 max-complexity = 18
-select = "B,C,C4,E,F,W,T4,B9"
 count = "true"
 show-source = "true"
 statistics = "true"
@@ -67,7 +71,6 @@ strictness = "full"
 
 [tool.black]
 line-length = 88
-experimental-string-processing = true
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -82,3 +85,15 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+include_trailing_comma = true
+reverse_relative = true
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: mark test as slow"
+]

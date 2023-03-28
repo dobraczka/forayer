@@ -1,15 +1,17 @@
 """OAEI knowledge graph track dataset class."""
 
+import logging
 from collections import namedtuple
 from typing import Dict, Tuple
 
 import pystow
-from forayer.datasets.base_dataset import ForayerDataset
-from forayer.input_output.from_to_rdf import from_rdflib
-from forayer.knowledge_graph import ClusterHelper, ERTask
 from pystow import ensure_rdf
 from rdflib import Graph
 from tqdm import tqdm
+
+from forayer.datasets.base_dataset import ForayerDataset
+from forayer.input_output.from_to_rdf import from_rdflib
+from forayer.knowledge_graph import ClusterHelper, ERTask
 
 URLWithFileName = namedtuple("URLWithFileName", ["url", "file_name"])
 OAEITaskFiles = namedtuple(
@@ -20,6 +22,8 @@ OAEITaskFiles = namedtuple(
         "ref",
     ],
 )
+
+logger = logging.getLogger(__name__)
 
 
 class OAEIKGDataset(ForayerDataset):
@@ -127,13 +131,10 @@ class OAEIKGDataset(ForayerDataset):
         )
 
     def __repr__(self):
-        return (
-            self.__class__.__name__
-            + f"(task={self.task})"
-        )
+        return self.__class__.__name__ + f"(task={self.task})"
 
     def _load_entity_links(self, ref: Graph) -> ClusterHelper:
-        print("Parsing ref graph")
+        logger.info("Parsing ref graph")
         pairs: Dict[str, Tuple[str, str]] = {}
         for stmt in tqdm(ref, desc="Gathering links"):
             s, p, o = stmt

@@ -1,4 +1,5 @@
 import pytest
+
 from forayer.knowledge_graph import ClusterHelper
 
 
@@ -58,14 +59,14 @@ def test_cluster_links():
     assert clusters.links("1") == "a1"
     assert clusters.links("a1", always_return_set=True) == {"1"}
     with pytest.raises(KeyError):
-        print(clusters.links("wrong"))
+        clusters.links("wrong")
 
     clusters_1 = ClusterHelper([{1, 4}, {2, 5}, {3, 6}])
     assert clusters_1.links(1) == 4
     assert clusters_1.links(4) == 1
     assert clusters_1.links(1, always_return_set=True) == {4}
     with pytest.raises(KeyError):
-        print(clusters_1.links("wrong"))
+        clusters_1.links("wrong")
 
 
 def test_cluster_members():

@@ -327,12 +327,7 @@ class ClusterHelper:
            ClusterHelper with n clusters.
         """
         r_gen = random_generator(seed)
-        return ClusterHelper(
-            {
-                c_id: cluster
-                for c_id, cluster in r_gen.sample(list(self.clusters.items()), n)
-            }
-        )
+        return ClusterHelper(dict(r_gen.sample(list(self.clusters.items()), n)))
 
     def merge(self, c1, c2, new_id=None):
         """Merge two clusters.

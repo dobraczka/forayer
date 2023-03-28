@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from functools import reduce
 from itertools import chain
-from typing import TYPE_CHECKING, Any, Dict, List, Set, Union, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 from forayer.utils.dict_help import dict_merge
 from forayer.utils.random_help import random_generator
