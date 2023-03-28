@@ -3,7 +3,7 @@ from nox_poetry import Session, session
 
 @session()
 def tests(session: Session) -> None:
-    args = session.posargs or ["--cov=forayer/", "--cov-report=xml", "tests/"]
+    args = session.posargs or ["-m", "not slow", "--cov", "--cov-report=xml"]
     session.install(".[all]")
     session.install("pytest")
     session.install("pytest-cov")
