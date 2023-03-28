@@ -1,13 +1,14 @@
 from collections import Counter, defaultdict
+from typing import Dict
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from forayer.knowledge_graph import KG, AttributeEmbeddedKG, ERTask
 from joblib import Memory
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-from typing import Dict
+
+from forayer.knowledge_graph import KG, AttributeEmbeddedKG, ERTask
 
 memory = Memory("./data/data_frames", mmap_mode="r+")
 

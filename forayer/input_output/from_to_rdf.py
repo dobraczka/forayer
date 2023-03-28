@@ -1,12 +1,16 @@
 """Read and write semantic web sources."""
+import logging
 from collections import defaultdict
 from typing import Any, Callable, Dict, Set
 
 import rdflib
-from forayer.knowledge_graph import KG
 from rdflib import Graph
 from rdflib.term import Literal
 from tqdm import tqdm
+
+from forayer.knowledge_graph import KG
+
+logger = logging.getLogger(__name__)
 
 
 def from_rdflib(
@@ -87,7 +91,7 @@ def load_from_rdf(
         the loaded kg object
     """
     g = Graph()
-    print(f"Reading graph from {in_path}. This might take a while...")
+    logger.info(f"Reading graph from {in_path}. This might take a while...")
     g.parse(in_path, format=format)
     return from_rdflib(
         g,

@@ -2,6 +2,7 @@
 import os
 
 import pytest
+
 from forayer.transformation.word_embedding import _EMBEDDING_INFO, AttributeVectorizer
 
 _EMBEDDING_INFO["glove"] = (

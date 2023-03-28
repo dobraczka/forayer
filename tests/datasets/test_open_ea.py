@@ -1,6 +1,7 @@
 from typing import List
 
 import pytest
+
 from forayer.datasets import OpenEADataset
 from forayer.knowledge_graph import KG
 

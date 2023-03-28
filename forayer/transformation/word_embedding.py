@@ -23,6 +23,8 @@ _EMBEDDING_INFO = {
     ),
 }
 
+logger = logging.getLogger(__name__)
+
 
 class AttributeVectorizer:
     """Vectorizer class to get attribute embeddings of entities with pre-trained embeddings.
@@ -116,7 +118,9 @@ class AttributeVectorizer:
             # we have to download them
             if not os.path.exists(embeddings_dir):
                 os.makedirs(embeddings_dir)
-            print(f"Downloading {self.embedding_type} embeddings to {embeddings_dir}")
+            logger.info(
+                f"Downloading {self.embedding_type} embeddings to {embeddings_dir}"
+            )
             wget.download(dl_url, embeddings_dir)
             with ZipFile(os.path.join(embeddings_dir, zip_name), "r") as zip_obj:
                 zip_obj.extractall(embeddings_dir)
@@ -125,7 +129,7 @@ class AttributeVectorizer:
             return True
 
     def _load_embeddings(self):
-        print(f"Loading word embeddings from {self.vectors_path}")
+        logger.info(f"Loading word embeddings from {self.vectors_path}")
         if self.embedding_type == "fasttext":
             return load_facebook_model(self.vectors_path).wv
         try:

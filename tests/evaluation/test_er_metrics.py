@@ -1,7 +1,8 @@
 import pytest
+from numpy.testing import assert_almost_equal
+
 from forayer.evaluation import match_quality, p_e_ratio
 from forayer.knowledge_graph import KG, ClusterHelper, ERTask
-from numpy.testing import assert_almost_equal
 
 
 @pytest.fixture
