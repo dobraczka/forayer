@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Loosen python dependency restriction
 
+### Deprecated
+
+- AttributeVectorizer and AttributeEmbeddedKG are deprecated now and will be removed in the next minor release
+
 ## [0.4.3] - 2022-10-19
 
 ### Fixed
