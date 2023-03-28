@@ -7,6 +7,7 @@ from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
 from typing import Any, Dict, Iterable, List, Set, Union
+from warnings import warn
 
 from forayer.transformation.word_embedding import AttributeVectorizer
 from forayer.utils.dict_help import dict_merge, nested_ddict2dict
@@ -710,6 +711,14 @@ class AttributeEmbeddedKG(KG):
 
         >>> dbp_embedded = AttributeEmbeddedKG.from_kg(dbpedia, vectorizer=vectorizer)
         """
+        warn(
+            (
+                "AttributeEmbeddedKG is deprecated and will be removed in the next"
+                " minor version."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.vectorizer = vectorizer
         self.vectorizer.reset_token_count()
         attr_embedded_entities = {

@@ -2,6 +2,7 @@
 import logging
 import os
 from typing import Any, Callable, Dict, List
+from warnings import warn
 from zipfile import ZipFile
 
 import numpy as np
@@ -67,6 +68,14 @@ class AttributeVectorizer:
         ValueError
             if embedding_type is unknown or vectors_path does not exist
         """
+        warn(
+            (
+                "AttributeVectorizer is deprecated and will be removed in the next"
+                " minor version."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if tokenizer is None:
             self.tokenizer = tokenize
         else:
