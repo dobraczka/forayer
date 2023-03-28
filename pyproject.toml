@@ -14,7 +14,7 @@ repository = "https://github.com/dobraczka/forayer"
 "Documentation" = "https://forayer.readthedocs.io"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<4.0"
 tqdm = "^4.0"
 sphinx = {version = "^4.0.2", optional = true}
 insegel = {version = "^1.1.0", optional = true}
