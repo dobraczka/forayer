@@ -1,5 +1,6 @@
 from typing import List
 
+import pytest
 from forayer.datasets import OpenEADataset
 from forayer.knowledge_graph import KG
 
@@ -17,6 +18,7 @@ def triples(kg: KG, attributes=True) -> List:
     return all_trip
 
 
+@pytest.mark.slow
 def test_open_ea_dataset():
     dw15kv1 = OpenEADataset(
         ds_pair="D_W",

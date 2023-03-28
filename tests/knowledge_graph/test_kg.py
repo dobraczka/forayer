@@ -131,7 +131,7 @@ def test_search(simple_kg_entites_rel_123):
     e1 = ("e1", entities["e1"])
     e2 = ("e2", entities["e2"])
     e3 = ("e3", entities["e3"])
-    entities = {e_id: val for e_id, val in [e1, e2, e3]}
+    entities = dict([e1, e2, e3])
     kg = KG(entities, rel)
 
     assert kg.search("first entity") == {e1[0]: e1[1]}

@@ -82,3 +82,8 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: mark test as slow"
+]
