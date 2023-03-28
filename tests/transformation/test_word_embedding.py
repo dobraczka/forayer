@@ -6,7 +6,7 @@ import pytest
 from forayer.transformation.word_embedding import _EMBEDDING_INFO, AttributeVectorizer
 
 _EMBEDDING_INFO["glove"] = (
-    "https://speicherwolke.uni-leipzig.de/index.php/s/TyAaQtsJ8C9enDY/download",
+    "https://cloud.scadsai.uni-leipzig.de/index.php/s/7xkBke3iGRgPYDd",
     "GloveTest.zip",
     "testglove.txt",
 )

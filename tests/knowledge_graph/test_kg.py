@@ -170,7 +170,7 @@ def test_attribute_embedded(tmpdir, kg_first_second_third):
 
     # use toy embeddings to speed up test and lower traffic
     forayer.transformation.word_embedding._EMBEDDING_INFO["glove"] = (
-        "https://speicherwolke.uni-leipzig.de/index.php/s/yRmkFEXHX6J4cQL/download",
+        "https://cloud.scadsai.uni-leipzig.de/index.php/s/GAjstQ639Y6BrsW",
         "test_embeddings.zip",
         "glove.6B.300d.txt",
     )
@@ -222,7 +222,7 @@ def test_attribute_embedded_with_missing_embeddings(tmpdir, kg_first_second_thir
 
     # use toy embeddings to speed up test and lower traffic
     forayer.transformation.word_embedding._EMBEDDING_INFO["glove"] = (
-        "https://speicherwolke.uni-leipzig.de/index.php/s/nzGo7GeDxyzFpfN/download",
+        "https://cloud.scadsai.uni-leipzig.de/index.php/s/2KcmjEWRPFCffR5",
         "test_embeddings_with_missing.zip",  # "first" does not have an embedding
         "glove.6B.300d.txt",
     )

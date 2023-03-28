@@ -59,7 +59,7 @@ def type_checking(session: Session) -> None:
 
 
 @session()
-def build_docs(session: Session) -> None:
+def build_doc(session: Session) -> None:
     session.install(".")
     session.install("sphinx")
     session.install("insegel")
