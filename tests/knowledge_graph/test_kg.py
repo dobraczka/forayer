@@ -1,11 +1,12 @@
-import forayer.transformation.word_embedding
 import numpy as np
 import pytest
-from forayer.knowledge_graph import KG, AttributeEmbeddedKG
-from forayer.transformation.word_embedding import AttributeVectorizer
 from numpy.testing import assert_array_equal
 from rdflib import Literal, URIRef
 from rdflib.namespace import FOAF
+
+import forayer.transformation.word_embedding
+from forayer.knowledge_graph import KG, AttributeEmbeddedKG
+from forayer.transformation.word_embedding import AttributeVectorizer
 
 
 @pytest.fixture
@@ -131,7 +132,7 @@ def test_search(simple_kg_entites_rel_123):
     e1 = ("e1", entities["e1"])
     e2 = ("e2", entities["e2"])
     e3 = ("e3", entities["e3"])
-    entities = {e_id: val for e_id, val in [e1, e2, e3]}
+    entities = dict([e1, e2, e3])
     kg = KG(entities, rel)
 
     assert kg.search("first entity") == {e1[0]: e1[1]}
@@ -169,7 +170,7 @@ def test_attribute_embedded(tmpdir, kg_first_second_third):
 
     # use toy embeddings to speed up test and lower traffic
     forayer.transformation.word_embedding._EMBEDDING_INFO["glove"] = (
-        "https://speicherwolke.uni-leipzig.de/index.php/s/yRmkFEXHX6J4cQL/download",
+        "https://cloud.scadsai.uni-leipzig.de/index.php/s/GAjstQ639Y6BrsW/download/test_embeddings.zip",
         "test_embeddings.zip",
         "glove.6B.300d.txt",
     )
@@ -221,7 +222,7 @@ def test_attribute_embedded_with_missing_embeddings(tmpdir, kg_first_second_thir
 
     # use toy embeddings to speed up test and lower traffic
     forayer.transformation.word_embedding._EMBEDDING_INFO["glove"] = (
-        "https://speicherwolke.uni-leipzig.de/index.php/s/nzGo7GeDxyzFpfN/download",
+        "https://cloud.scadsai.uni-leipzig.de/index.php/s/2KcmjEWRPFCffR5/download/test_embeddings_with_missing.zip",
         "test_embeddings_with_missing.zip",  # "first" does not have an embedding
         "glove.6B.300d.txt",
     )
@@ -266,9 +267,7 @@ def test_attribute_embedded_with_missing_embeddings(tmpdir, kg_first_second_thir
     assert (
         str(class_initialized_a_kg)
         == "testkg: (# entities_with_rel: 2, # rel: 1, # entities_with_attributes: 3, #"
-        " attributes: 3, "
-        + EXPECTED_WARNING
-        + ")"
+        " attributes: 3, " + EXPECTED_WARNING + ")"
     )
 
     assert str(class_initialized_a_kg) == class_initialized_a_kg.info()
@@ -469,8 +468,7 @@ def test_multiple_adding_removing_example(simple_kg_entites_rel_123):
 def test_info_with_ints():
     kg = KG(entities={0: {0: "a"}, 1: {0: "b"}}, rel={0: {1: 0}}, name="kg1")
     assert (
-        kg.info()
-        == "kg1: (# entities: 2, # entities_with_rel: 2, # rel: 1, #"
+        kg.info() == "kg1: (# entities: 2, # entities_with_rel: 2, # rel: 1, #"
         " entities_with_attributes: 2, # attributes: 2, # attr_values: 2)"
     )
 

@@ -4,8 +4,9 @@ from functools import wraps
 from pathlib import Path
 from typing import Union
 
-from forayer.knowledge_graph import KG, ClusterHelper, ERTask
 from pystow.cache import CachedPickle
+
+from forayer.knowledge_graph import KG, ClusterHelper, ERTask
 
 
 class ForayerDataset:

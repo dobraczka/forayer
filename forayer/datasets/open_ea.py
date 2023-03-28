@@ -2,6 +2,7 @@
 import os
 
 import pystow
+
 from forayer.datasets.base_dataset import ForayerDataset
 from forayer.input_output.from_to_open_ea import from_openea
 from forayer.knowledge_graph import ERTask
@@ -55,8 +56,7 @@ class OpenEADataset(ForayerDataset):
 
     def __repr__(self):
         return (
-            self.__class__.__name__
-            + f"(ds_pair={self.ds_pair}, size={self.size},"
+            self.__class__.__name__ + f"(ds_pair={self.ds_pair}, size={self.size},"
             f" version={self.version},{self.er_task})"
         )
 

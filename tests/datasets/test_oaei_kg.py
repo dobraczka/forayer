@@ -1,6 +1,9 @@
+import pytest
+
 from forayer.datasets import OAEIKGDataset
 
 
+@pytest.mark.slow
 def test_open_ea_dataset():
     ds = OAEIKGDataset(task="memoryalpha-memorybeta", force=True)
 
