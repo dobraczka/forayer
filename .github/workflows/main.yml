@@ -37,7 +37,7 @@ jobs:
     - name: Test with nox
       run: nox -s tests
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: ./coverage/reports/
