@@ -6,14 +6,16 @@ import warnings
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
-from typing import Any, Dict, Iterable, List, Set, Union
+from typing import Any, Callable, Dict, Iterable, List, Set, Union
 from warnings import warn
 
 from rdflib import Graph, Literal, URIRef
 from tqdm import tqdm
 
 from forayer.transformation.word_embedding import AttributeVectorizer
+from forayer.utils.cleaning_help import clean_attr_value
 from forayer.utils.dict_help import dict_merge, nested_ddict2dict
+from forayer.utils.prefix_help import PrefixHelper
 from forayer.utils.random_help import random_generator
 
 
@@ -659,6 +661,35 @@ class KG:
             .union(set(self.rel.keys()))
             .union(set(self._inv_rel.keys()))
         )
+
+    def cleaned_entities(
+        self,
+        key: Union[str, List[str]] = None,
+        prefix_mapping: Dict[str, str] = None,
+        clean_fun: Callable = None,
+    ) -> Dict[Any, Any]:
+        if not hasattr(self, "prefix_helper"):
+            self.prefix_helper = PrefixHelper(prefix_mapping)
+        if key is None:
+            entities = self.entities
+        else:
+            entities = self.__getitem__(key)
+
+        if clean_fun is None:
+            clean_fun = clean_attr_value
+
+        cleaned_entities: Dict[Any, Dict] = {}
+        for (
+            e_name,
+            e_attr_name,
+            e_attr_value,
+        ) in self.prefix_helper.replacement_triple_generator(entities):
+            cleaned_attr = clean_fun(e_attr_value)
+            if e_name in cleaned_entities:
+                cleaned_entities[e_name][e_attr_name] = cleaned_attr
+            else:
+                cleaned_entities[e_name] = {e_attr_name: cleaned_attr}
+        return cleaned_entities
 
 
 class AttributeEmbeddedKG(KG):

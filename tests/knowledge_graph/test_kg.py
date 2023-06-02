@@ -480,3 +480,73 @@ def test_clone(simple_kg_entites_rel_123):
     assert cloned == kg
     cloned.remove_entity("e3")
     assert cloned != kg
+
+
+@pytest.fixture
+def dbpedia_snippet_to_clean():
+    entities = {
+        "http://dbpedia.org/resource/E362362": {
+            "http://dbpedia.org/ontology/runtime": '"6848.0"^^<http://www.w3.org/2001/XMLSchema#double>',
+            "http://dbpedia.org/ontology/gross": '"1.0422387E7"^^<http://dbpedia.org/datatype/usDollar>',
+        },
+        "http://dbpedia.org/resource/E534644": {
+            "http://dbpedia.org/ontology/imdbId": "0044475"
+        },
+        "http://dbpedia.org/resource/E216844": {
+            "http://dbpedia.org/ontology/birthYear": '"1950"^^<http://www.w3.org/2001/XMLSchema#gYear>'
+        },
+    }
+    rel = {
+        "http://dbpedia.org/resource/E362362": {
+            "http://dbpedia.org/resource/E216844": "http://dbpedia.org/ontology/director"
+        }
+    }
+    expected = {
+        "mydbr:E362362": {"dbo:runtime": "6848.0", "dbo:gross": "1.0422387E7"},
+        "mydbr:E534644": {"dbo:imdbId": "0044475"},
+        "mydbr:E216844": {"dbo:birthYear": "1950"},
+    }
+    return entities, rel, expected
+
+
+@pytest.fixture
+def yago_snippet_to_clean():
+    entities = {
+        "YAGO/E639075": {
+            "happenedOnDate": '"356-##-##"^^xsd:date',
+            "redirectedFrom": [
+                '"Water (película de 2005)"@spa',
+                '"اب (فیلم ۲۰۰۵)"@fas',
+            ],
+        },
+        "YAGO/E724653": {"redirectedFrom": '"Captain Pirate"@ita"'},
+        "YAGO/E265633": {"wasBornOnDate": '"1950-09-15"^^xsd:date'},
+    }
+    rel = {"YAGO/E241069": {"YAGO/E639075": "wroteMusicFor"}}
+    expected = {
+        "YAGO/E639075": {
+            "happenedOnDate": "356-##-##",
+            "redirectedFrom": ["Water (película de 2005)", "اب (فیلم ۲۰۰۵)"],
+        },
+        "YAGO/E724653": {"redirectedFrom": "Captain Pirate"},
+        "YAGO/E265633": {"wasBornOnDate": "1950-09-15"},
+    }
+    return entities, rel, expected
+
+@pytest.fixture
+def snippet_getter(request, dbpedia_snippet_to_clean, yago_snippet_to_clean):
+    snippet_name = request.param
+    if snippet_name == 'dbpedia':
+        return dbpedia_snippet_to_clean, snippet_name
+    elif snippet_name == 'yago':
+        return yago_snippet_to_clean, snippet_name
+    else:
+        raise ValueError('unknown snippet')
+
+@pytest.mark.parametrize('snippet_getter', ['dbpedia', 'yago'], indirect=True)
+def test_cleaned_entities(snippet_getter):
+    ent_rel_exp, name = snippet_getter
+    entities, rel, expected = ent_rel_exp
+    kg = KG(entities=entities, rel=rel, name=name)
+    cleaned = kg.cleaned_entities(prefix_mapping={"http://dbpedia.org/resource/":"mydbr"})
+    assert cleaned == expected
