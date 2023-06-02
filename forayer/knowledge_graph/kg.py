@@ -668,12 +668,24 @@ class KG:
         prefix_mapping: Dict[str, str] = None,
         clean_fun: Callable = None,
     ) -> Dict[Any, Any]:
+        """Return cleaned entity information of specified entities.
+
+        By default remove datatype and language tags, shorten uris via prefixes
+
+        :param key: Wanted entity ids or None to get all
+        :param prefix_mapping: Mappings from IRI namespaces, or commonly used prefixes from prefix.cc will be used
+        :param clean_fun: Function to clean attributes, if None, will remove datatype and language tags
+        :return: Cleaned entity info
+        """
         if not hasattr(self, "prefix_helper"):
             self.prefix_helper = PrefixHelper(prefix_mapping)
         if key is None:
             entities = self.entities
         else:
             entities = self.__getitem__(key)
+
+        if isinstance(key, str):
+            entities = {key: entities}
 
         if clean_fun is None:
             clean_fun = clean_attr_value

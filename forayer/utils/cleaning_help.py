@@ -3,6 +3,10 @@ from typing import Any, Callable
 from rdflib.plugins.parsers.ntriples import r_literal
 
 def clean_attr_value(attr_value: Any):
+    """Remove datatype and language tags
+
+    :param attr_value: attribute value to clean
+    """
     if isinstance(attr_value, list):
         return [clean_attr_value(inner_attr_value) for inner_attr_value in attr_value]
     elif isinstance(attr_value, str):

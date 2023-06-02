@@ -4,6 +4,7 @@ import pystow
 
 
 class PrefixHelper:
+    """Use shortened prefix via prefix.cc or given prefix mappings."""
     def __init__(
         self, prefix_mapping: Dict[str, str] = None, only_use_given: bool = False
     ):
@@ -30,6 +31,11 @@ class PrefixHelper:
     def replacement_triple_generator(
         self, entity_info: Dict
     ) -> Generator[Tuple[Any, Any, Any], None, None]:
+        """Returns a generator of triples with shortened prefixes.
+
+        :param entity_info: Entity info to shorten prefixes
+        :return: A generator of triples with shortened prefixes
+        """
         for e_name, e_attr_dict in entity_info.items():
             e_name = self._replace_if_possible(e_name)
             for attr_name, attr_val in e_attr_dict.items():
