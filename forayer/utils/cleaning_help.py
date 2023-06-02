@@ -1,6 +1,8 @@
 import re
 from typing import Any, Callable
+
 from rdflib.plugins.parsers.ntriples import r_literal
+
 
 def clean_attr_value(attr_value: Any):
     """Remove datatype and language tags

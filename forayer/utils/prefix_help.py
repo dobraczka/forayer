@@ -5,6 +5,7 @@ import pystow
 
 class PrefixHelper:
     """Use shortened prefix via prefix.cc or given prefix mappings."""
+
     def __init__(
         self, prefix_mapping: Dict[str, str] = None, only_use_given: bool = False
     ):
@@ -13,7 +14,11 @@ class PrefixHelper:
             self.prefix_mapping = prefix_mapping
         else:
             predefined = {}
-            for _, row in pystow.ensure_csv("forayer", url="http://prefix.cc/popular/all.file.csv", read_csv_kwargs=dict(header=None, names=["prefix", "full"], sep=",")).iterrows():
+            for _, row in pystow.ensure_csv(
+                "forayer",
+                url="http://prefix.cc/popular/all.file.csv",
+                read_csv_kwargs=dict(header=None, names=["prefix", "full"], sep=","),
+            ).iterrows():
                 # prefixes are sorted by popularity
                 # we want the most popular ones
                 if row["full"] not in predefined:
@@ -41,4 +46,3 @@ class PrefixHelper:
             for attr_name, attr_val in e_attr_dict.items():
                 attr_name = self._replace_if_possible(attr_name)
                 yield e_name, self.prefix_mapping.get(attr_name, attr_name), attr_val
-

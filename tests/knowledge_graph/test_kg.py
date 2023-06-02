@@ -533,20 +533,24 @@ def yago_snippet_to_clean():
     }
     return entities, rel, expected
 
+
 @pytest.fixture
 def snippet_getter(request, dbpedia_snippet_to_clean, yago_snippet_to_clean):
     snippet_name = request.param
-    if snippet_name == 'dbpedia':
+    if snippet_name == "dbpedia":
         return dbpedia_snippet_to_clean, snippet_name
-    elif snippet_name == 'yago':
+    elif snippet_name == "yago":
         return yago_snippet_to_clean, snippet_name
     else:
-        raise ValueError('unknown snippet')
+        raise ValueError("unknown snippet")
 
-@pytest.mark.parametrize('snippet_getter', ['dbpedia', 'yago'], indirect=True)
+
+@pytest.mark.parametrize("snippet_getter", ["dbpedia", "yago"], indirect=True)
 def test_cleaned_entities(snippet_getter):
     ent_rel_exp, name = snippet_getter
     entities, rel, expected = ent_rel_exp
     kg = KG(entities=entities, rel=rel, name=name)
-    cleaned = kg.cleaned_entities(prefix_mapping={"http://dbpedia.org/resource/":"mydbr"})
+    cleaned = kg.cleaned_entities(
+        prefix_mapping={"http://dbpedia.org/resource/": "mydbr"}
+    )
     assert cleaned == expected
