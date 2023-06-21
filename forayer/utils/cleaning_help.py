@@ -9,7 +9,7 @@ def clean_attr_value(attr_value: Any):
 
     :param attr_value: attribute value to clean
     """
-    if isinstance(attr_value, list):
+    if isinstance(attr_value, (list, set)):
         return [clean_attr_value(inner_attr_value) for inner_attr_value in attr_value]
     elif isinstance(attr_value, str):
         match = r_literal.match(attr_value)

@@ -495,6 +495,15 @@ def dbpedia_snippet_to_clean():
         "http://dbpedia.org/resource/E216844": {
             "http://dbpedia.org/ontology/birthYear": '"1950"^^<http://www.w3.org/2001/XMLSchema#gYear>'
         },
+        "http://dbpedia.org/resource/E167435": {
+            "http://purl.org/dc/elements/1.1/description": "Indian film director",
+            "http://dbpedia.org/ontology/activeYearsStartYear": '"1980"^^<http://www.w3.org/2001/XMLSchema#gYear>',
+            "http://dbpedia.org/ontology/birthYear": '"1955"^^<http://www.w3.org/2001/XMLSchema#gYear>',
+            "http://dbpedia.org/ontology/birthDate": {
+                '"1955-08-06"^^<http://www.w3.org/2001/XMLSchema#date>',
+                '"1955-06-08"^^<http://www.w3.org/2001/XMLSchema#date>',
+            },
+        },
     }
     rel = {
         "http://dbpedia.org/resource/E362362": {
@@ -505,6 +514,12 @@ def dbpedia_snippet_to_clean():
         "mydbr:E362362": {"dbo:runtime": "6848.0", "dbo:gross": "1.0422387E7"},
         "mydbr:E534644": {"dbo:imdbId": "0044475"},
         "mydbr:E216844": {"dbo:birthYear": "1950"},
+        "mydbr:E167435": {
+            "dc:description": "Indian film director",
+            "dbo:activeYearsStartYear": "1980",
+            "dbo:birthYear": "1955",
+            "dbo:birthDate": ["1955-08-06", "1955-06-08"],
+        },
     }
     return entities, rel, expected
 
