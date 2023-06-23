@@ -518,7 +518,7 @@ def dbpedia_snippet_to_clean():
             "dc:description": "Indian film director",
             "dbo:activeYearsStartYear": "1980",
             "dbo:birthYear": "1955",
-            "dbo:birthDate": ["1955-08-06", "1955-06-08"],
+            "dbo:birthDate": {"1955-08-06", "1955-06-08"},
         },
     }
     return entities, rel, expected
