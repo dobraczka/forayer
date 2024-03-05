@@ -2,7 +2,7 @@ from forayer.input_output.from_to_open_ea import from_openea
 
 
 def test_simple_remote_open_ea():
-    url = "https://cloud.scadsai.uni-leipzig.de/index.php/s/D5XLC4gSDyaESRe/download/TestOpenEA.zip"
+    url = "https://cloud.scadsai.uni-leipzig.de/index.php/s/9FBHPyQpDGSyPeL/download/TestOpenEA.zip"
     ertask = from_openea("TestData", kg_names=[0, 1], url=url)
     assert ertask[0]["e1"]["p1"] == "test"
     assert ertask[1]["e2"]["p1"] == "test2"
